@@ -1,12 +1,56 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hello Vercel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text → PDF</title>
+  <style>
+    body{font:16px/1.5 system-ui,Segoe UI,Arial;margin:0;background:#0b0b0b;color:#e6e6e6}
+    .wrap{max-width:800px;margin:40px auto;padding:24px;border:1px solid #2a2a2a;border-radius:12px;background:#121212}
+    h1{margin-top:0}
+    textarea{width:100%;min-height:260px;padding:12px;border-radius:10px;border:1px solid #333;background:#0f0f0f;color:#e6e6e6;resize:vertical}
+    button{margin-top:12px;padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .note{font-size:13px;color:#aaa}
+  </style>
 </head>
 <body>
-  <h1>Merhaba Dünya!</h1>
-  <p>Bu ilk test sayfamız.</p>
+  <div class="wrap">
+    <h1>Metni PDF'e Çevir</h1>
+    <p class="note">Metni gir → PDF indir. Sunucu: Vercel Serverless.</p>
+    <form id="f">
+      <textarea name="text" placeholder="Metni buraya yaz..."></textarea>
+      <button type="submit">PDF Oluştur ve İndir</button>
+    </form>
+  </div>
+
+<script>
+const form = document.getElementById('f');
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const btn = form.querySelector('button');
+  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+  const text = new FormData(form).get('text') || '';
+
+  try {
+    // JSON post ediyoruz (api hem JSON hem query destekli)
+    const res = await fetch('/api/make-pdf', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text })
+    });
+    if(!res.ok) throw new Error('Sunucu hatası');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'metin.pdf'; a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('PDF oluşturulamadı: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'PDF Oluştur ve İndir';
+  }
+});
+</script>
 </body>
 </html>
