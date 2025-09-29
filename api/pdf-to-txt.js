@@ -1,4 +1,6 @@
-import { getDocument } from "pdfjs-dist";
+import pkg from "pdfjs-dist";
+const { getDocument } = pkg;
+
 export const config = { api: { bodyParser: false } };
 
 function readRaw(req) {
@@ -15,6 +17,7 @@ export default async function handler(req, res) {
     res.status(405).json({ error: "Use POST" });
     return;
   }
+
   try {
     const buf = await readRaw(req);
     if (!buf || buf.length === 0) {
@@ -23,16 +26,16 @@ export default async function handler(req, res) {
     }
 
     const pdf = await getDocument({ data: new Uint8Array(buf) }).promise;
-    let fullText = "";
+    let text = "";
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const content = await page.getTextContent();
-      fullText += content.items.map(it => it.str).join(" ") + "\n";
+      text += content.items.map(it => it.str).join(" ") + "\n";
     }
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="extracted.txt"');
-    res.status(200).send(fullText.trim());
+    res.status(200).send(text.trim());
   } catch (err) {
     console.error("pdf-to-txt error:", err);
     res.status(500).json({ error: "Failed to extract text", detail: String(err.message || err) });
