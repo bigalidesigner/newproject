@@ -3,7 +3,29 @@ import formidable from "formidable";
 import { readFile } from "fs/promises";
 import pdfParse from "pdf-parse";
 
-// Vercel Functions'ta bodyParser yok; raw stream'i formidable ile biz okuyacağız.
+// ham gövdeyi oku
+function readRaw(req) {
+  return new Promise((resolve, reject) => {
+    let chunks = [];
+    req.on("data", (c) => chunks.push(c));
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
+async function parseMultipart(req) {
+  const form = formidable({
+    multiples: false,
+    keepExtensions: true,
+    maxFileSize: 25 * 1024 * 1024 // 25MB
+  });
+  return new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) reject(err);
+      else resolve({ fields, files });
+    });
+  });
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -12,50 +34,40 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { fields, files } = await parseForm(req);
+    const ct = (req.headers["content-type"] || "").toLowerCase();
 
-    // Tek dosya veya dizi olabilir
-    let f = files?.file;
-    if (!f) {
-      res.status(400).json({ error: "No file uploaded. Use form-data key 'file'." });
+    let buffer;
+
+    if (ct.startsWith("application/pdf") || ct.startsWith("application/octet-stream")) {
+      // RAW: body doğrudan PDF
+      buffer = await readRaw(req);
+    } else if (ct.includes("multipart/form-data")) {
+      // Multipart: form-data 'file'
+      const { files } = await parseMultipart(req);
+      let f = files?.file;
+      if (Array.isArray(f)) f = f[0];
+      if (!f?.filepath) {
+        res.status(400).json({ error: "No file uploaded. Use form-data key 'file'." });
+        return;
+      }
+      buffer = await readFile(f.filepath);
+    } else {
+      res.status(400).json({ error: "Unsupported content-type" });
       return;
     }
-    if (Array.isArray(f)) f = f[0];
 
-    const filePath = f?.filepath || f?.filepath; // formidable v3 -> filepath
-    const mime = (f?.mimetype || "").toLowerCase();
-    if (!filePath) {
-      res.status(400).json({ error: "Upload failed: no file path." });
-      return;
-    }
-    if (mime && !mime.includes("pdf")) {
-      res.status(400).json({ error: "Please upload a PDF file." });
+    if (!buffer || buffer.length === 0) {
+      res.status(400).json({ error: "Empty file" });
       return;
     }
 
-    const buffer = await readFile(filePath);
-    const data = await pdfParse(buffer);
+    const result = await pdfParse(buffer);
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="extracted.txt"');
-    res.status(200).send(data.text || "");
+    res.status(200).send(result.text || "");
   } catch (err) {
     console.error("pdf-to-txt error:", err);
     res.status(500).json({ error: "Failed to extract text" });
   }
-}
-
-// ---- helpers ----
-function parseForm(req) {
-  const form = formidable({
-    multiples: false,
-    keepExtensions: true,
-    maxFileSize: 10 * 1024 * 1024, // 10MB (ihtiyaca göre artır)
-  });
-  return new Promise((resolve, reject) => {
-    form.parse(req, (err, fields, files) => {
-      if (err) reject(err);
-      else resolve({ fields, files });
-    });
-  });
 }
