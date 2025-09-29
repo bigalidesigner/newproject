@@ -1,5 +1,4 @@
-import pkg from "pdfjs-dist";
-const { getDocument } = pkg;
+import pdfParse from "pdf-parse";
 
 export const config = { api: { bodyParser: false } };
 
@@ -25,19 +24,15 @@ export default async function handler(req, res) {
       return;
     }
 
-    const pdf = await getDocument({ data: new Uint8Array(buf) }).promise;
-    let text = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      text += content.items.map(it => it.str).join(" ") + "\n";
-    }
+    // pdf-parse doğrudan Buffer alabilir
+    const data = await pdfParse(buf);
+    const text = (data && data.text) ? data.text.trim() : "";
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="extracted.txt"');
-    res.status(200).send(text.trim());
+    res.status(200).send(text);
   } catch (err) {
     console.error("pdf-to-txt error:", err);
-    res.status(500).json({ error: "Failed to extract text", detail: String(err.message || err) });
+    res.status(500).json({ error: "Failed to extract text", detail: String(err?.message || err) });
   }
 }
