@@ -211,31 +211,34 @@ function handleFile(file){
   }
 }
 
-async function createPdf(text, baseName){
-  if (!text.trim()) { alert('Metin boş.'); return; }
-  actionBtn.disabled = true; actionBtn.textContent = 'Oluşturuluyor...';
+async function extractTextFromPdf(file, baseName){
+  actionBtn.disabled = true; actionBtn.textContent = 'Çıkarılıyor...';
   try{
-    const res = await fetch('/api/make-pdf', {
+    const arrayBuf = await file.arrayBuffer();
+    const res = await fetch('/api/pdf-to-txt', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ text, filename: baseName + '.pdf' })
+      headers:{ 'Content-Type': 'application/pdf' },
+      body: arrayBuf
     });
     if(!res.ok){
       let msg = 'Sunucu hatası';
       try { const j = await res.json(); msg = j.error || msg; } catch {}
       throw new Error(msg);
     }
-    const blob = await res.blob();
+    const text = await res.text();
+    txt.value = text;
+    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = baseName + '.pdf'; a.click();
+    a.href = url; a.download = baseName + '.txt'; a.click();
     URL.revokeObjectURL(url);
   }catch(err){
-    alert('PDF oluşturulamadı: ' + err.message);
+    alert('Metin çıkarılamadı: ' + err.message);
   }finally{
     actionBtn.disabled = false; actionBtn.textContent = (mode==='txt2pdf'?'PDF Oluştur ve İndir':'Metni Çıkar ve İndir (.txt)');
   }
 }
+
 
 // RAW gönderim
 async function extractTextFromPdf(file, baseName){
@@ -268,3 +271,4 @@ async function extractTextFromPdf(file, baseName){
 </script>
 </body>
 </html>
+
