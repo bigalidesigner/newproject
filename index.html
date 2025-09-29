@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Metin ↔ PDF Dönüştürücü • Yasmer PDF</title>
-  <meta name="description" content="TXT → PDF ve PDF → TXT dönüşümü. Dosyanı yükle, anında indir. Ücretsiz.">
+  <title>Text ↔ PDF Converter • Yasmer PDF</title>
+  <meta name="description" content="TXT → PDF and PDF → TXT conversion. Upload your file and download instantly. Free.">
   <style>
     :root{
       --bg:#0a0b0f; --card:#0f1117; --muted:#a6b0c3; --text:#e6e9ef;
@@ -60,13 +60,20 @@
     .muted{color:var(--muted); font-size:14px}
     footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center}
     .badge{display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:12px; background:rgba(0,208,132,.12); color:#8bf0c8; border:1px solid rgba(0,208,132,.3)}
+    .lang{display:flex; align-items:center; gap:8px}
   </style>
 </head>
 <body>
   <div class="shell">
     <header>
       <div class="logo"><strong>Yasmer <span>PDF</span></strong></div>
-      <div class="badge">Ücretsiz • Hızlı</div>
+      <div class="lang">
+        <div class="badge" id="badge">Ücretsiz • Hızlı</div>
+        <select id="langSel" title="Language">
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+        </select>
+      </div>
     </header>
 
     <div class="card">
@@ -84,97 +91,203 @@
             </div>
           </form>
 
-          <p class="muted">PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.</p>
+          <p class="muted" id="hint">PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.</p>
         </div>
 
         <!-- Sağ taraf -->
         <div class="side">
           <div class="panel">
-            <label for="mode">Dönüştürme Modu</label>
+            <label for="mode" id="modeLabel">Dönüştürme Modu</label>
             <select id="mode">
-              <option value="txt2pdf" selected>TXT → PDF</option>
+              <option value="txt2pdf">TXT → PDF</option>
               <option value="pdf2txt">PDF → TXT</option>
             </select>
           </div>
 
           <div class="panel">
-            <label>Dosya Yükle (Sürükle & Bırak)</label>
+            <label id="uploadLabel">Dosya Yükle (Sürükle & Bırak)</label>
             <div id="drop" class="drop">
-              <strong id="acceptLabel">.txt</strong> dosyanı buraya bırak<br/>
-              <span class="muted">veya tıkla seç</span>
+              <strong id="acceptLabel">.txt</strong> <span id="dropText">dosyanı buraya bırak</span><br/>
+              <span class="muted" id="orClick">veya tıkla seç</span>
               <input id="file" type="file" accept=".txt,text/plain" hidden>
             </div>
             <div style="margin-top:10px" class="muted" id="fileInfo"></div>
           </div>
 
           <div class="panel">
-            <label>Çıktı Dosya Adı (opsiyonel)</label>
+            <label id="outLabel">Çıktı Dosya Adı (opsiyonel)</label>
             <input type="text" id="outName" placeholder="ör. my-file">
-            <div class="muted">Uzantı otomatik eklenir (.pdf / .txt)</div>
+            <div class="muted" id="outHint">Uzantı otomatik eklenir (.pdf / .txt)</div>
           </div>
         </div>
       </div>
     </div>
 
-    <footer>© <span id="y"></span> Yasmer PDF • Vercel üzerinde barındırılıyor</footer>
+    <footer>© <span id="y"></span> Yasmer PDF • <span id="hosted">Vercel üzerinde barındırılıyor</span></footer>
   </div>
 
 <script>
-const form = document.getElementById('f');
-const txt = document.getElementById('text');
-const clearBtn = document.getElementById('clearBtn');
-const drop = document.getElementById('drop');
-const fileInput = document.getElementById('file');
-const fileInfo = document.getElementById('fileInfo');
-const modeSel = document.getElementById('mode');
-const title = document.getElementById('title');
-const subtitle = document.getElementById('subtitle');
-const acceptLabel = document.getElementById('acceptLabel');
-const outName = document.getElementById('outName');
-const actionBtn = document.getElementById('actionBtn');
+/* ==================== i18n ==================== */
+const I18N = {
+  tr: {
+    badge: "Ücretsiz • Hızlı",
+    title_txt2pdf: "TXT → PDF",
+    title_pdf2txt: "PDF → TXT",
+    sub_txt2pdf: "Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.",
+    sub_pdf2txt: "Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.",
+    action_txt2pdf: "PDF Oluştur ve İndir",
+    action_pdf2txt: "Metni Çıkar ve İndir (.txt)",
+    clear: "Temizle",
+    hint: "PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.",
+    modeLabel: "Dönüştürme Modu",
+    uploadLabel: "Dosya Yükle (Sürükle & Bırak)",
+    dropText: "dosyanı buraya bırak",
+    orClick: "veya tıkla seç",
+    accept_txt: ".txt",
+    accept_pdf: ".pdf",
+    outLabel: "Çıktı Dosya Adı (opsiyonel)",
+    outHint: "Uzantı otomatik eklenir (.pdf / .txt)",
+    hosted: "Vercel üzerinde barındırılıyor",
+    ph_txt: "Metni buraya yaz...",
+    alerts: {
+      txtOnly: "Lütfen .txt dosyası yükleyin.",
+      pdfOnly: "Lütfen .pdf dosyası yükleyin.",
+      emptyText: "Metin boş.",
+      serverError: "Sunucu hatası",
+      extractFail: "Metin çıkarılamadı",
+      tooBig: "Dosya çok büyük (≤ 4 MB önerilir)."
+    }
+  },
+  en: {
+    badge: "Free • Fast",
+    title_txt2pdf: "TXT → PDF",
+    title_pdf2txt: "PDF → TXT",
+    sub_txt2pdf: "Type/paste text or drop a <b>.txt</b> file in the box on the right.",
+    sub_pdf2txt: "Drop a <b>.pdf</b> file in the box on the right; we’ll extract its text.",
+    action_txt2pdf: "Create & Download PDF",
+    action_pdf2txt: "Extract & Download (.txt)",
+    clear: "Clear",
+    hint: "In PDF → TXT mode, the extracted text appears here and downloads as .txt.",
+    modeLabel: "Conversion Mode",
+    uploadLabel: "Upload (Drag & Drop)",
+    dropText: "drop your file here",
+    orClick: "or click to choose",
+    accept_txt: ".txt",
+    accept_pdf: ".pdf",
+    outLabel: "Output Filename (optional)",
+    outHint: "Extension is added automatically (.pdf / .txt)",
+    hosted: "Hosted on Vercel",
+    ph_txt: "Type your text here...",
+    alerts: {
+      txtOnly: "Please upload a .txt file.",
+      pdfOnly: "Please upload a .pdf file.",
+      emptyText: "Text is empty.",
+      serverError: "Server error",
+      extractFail: "Failed to extract text",
+      tooBig: "File is too large (≤ 4 MB recommended)."
+    }
+  }
+};
+
+let lang = (navigator.language || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+const $ = (id)=>document.getElementById(id);
+
+const langSel = $("langSel");
+langSel.value = lang;
+
+/* ==================== Elements ==================== */
+const form = $("f");
+const txt = $("text");
+const clearBtn = $("clearBtn");
+const drop = $("drop");
+const fileInput = $("file");
+const fileInfo = $("fileInfo");
+const modeSel = $("mode");
+const titleEl = $("title");
+const subtitle = $("subtitle");
+const acceptLabel = $("acceptLabel");
+const outName = $("outName");
+const actionBtn = $("actionBtn");
+const badge = $("badge");
+const hint = $("hint");
+const modeLabel = $("modeLabel");
+const uploadLabel = $("uploadLabel");
+const dropText = $("dropText");
+const orClick = $("orClick");
+const outLabel = $("outLabel");
+const outHint = $("outHint");
+const hosted = $("hosted");
 document.getElementById('y').textContent = new Date().getFullYear();
 
 let mode = 'txt2pdf';
 
-modeSel.addEventListener('change', ()=>{
-  mode = modeSel.value;
+/* ==================== i18n Apply ==================== */
+function applyI18N() {
+  const T = I18N[lang];
+  badge.textContent = T.badge;
+  hint.textContent = T.hint;
+  modeLabel.textContent = T.modeLabel;
+  uploadLabel.textContent = T.uploadLabel;
+  dropText.textContent = T.dropText;
+  orClick.textContent = T.orClick;
+  outLabel.textContent = T.outLabel;
+  outHint.textContent = T.outHint;
+  hosted.textContent = T.hosted;
+
   if (mode === 'txt2pdf') {
-    title.textContent = 'TXT → PDF';
-    subtitle.innerHTML = 'Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.';
-    acceptLabel.textContent = '.txt';
+    titleEl.textContent = T.title_txt2pdf;
+    subtitle.innerHTML = T.sub_txt2pdf;
+    acceptLabel.textContent = T.accept_txt;
     fileInput.accept = '.txt,text/plain';
-    actionBtn.textContent = 'PDF Oluştur ve İndir';
-    txt.placeholder = 'Metni buraya yaz...';
-    txt.value = '';
-    fileInfo.textContent = '';
+    actionBtn.textContent = T.action_txt2pdf;
+    txt.placeholder = T.ph_txt;
   } else {
-    title.textContent = 'PDF → TXT';
-    subtitle.innerHTML = 'Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.';
-    acceptLabel.textContent = '.pdf';
+    titleEl.textContent = T.title_pdf2txt;
+    subtitle.innerHTML = T.sub_pdf2txt;
+    acceptLabel.textContent = T.accept_pdf;
     fileInput.accept = '.pdf,application/pdf';
-    actionBtn.textContent = 'Metni Çıkar ve İndir (.txt)';
-    txt.placeholder = 'Çıkarılan metin burada görünecek...';
-    txt.value = '';
-    fileInfo.textContent = '';
+    actionBtn.textContent = T.action_pdf2txt;
+    txt.placeholder = (lang==='tr'
+      ? 'Çıkarılan metin burada görünecek...'
+      : 'Extracted text will appear here...');
   }
+  clearBtn.textContent = T.clear;
+}
+applyI18N();
+
+langSel.addEventListener('change', ()=>{
+  lang = langSel.value;
+  applyI18N();
 });
 
+/* ==================== Mode Switch ==================== */
+modeSel.addEventListener('change', ()=>{
+  mode = modeSel.value;
+  txt.value = '';
+  fileInfo.textContent = '';
+  outName.value = '';
+  applyI18N();
+});
+
+/* ==================== Form submit ==================== */
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const base = (outName.value || (mode === 'txt2pdf' ? 'text' : 'extracted')).trim();
   if (mode === 'txt2pdf') {
     await createPdf(txt.value, base);
   } else {
-    if (!txt.value.trim()) alert('PDF yükleyip metin çıkarabilirsiniz.');
+    if (!txt.value.trim()) alert(I18N[lang].alerts.emptyText);
   }
 });
 
+/* ==================== Clear ==================== */
 clearBtn.addEventListener('click', ()=>{
   txt.value = '';
   fileInfo.textContent = '';
   outName.value = '';
 });
 
+/* ==================== Drag & Drop ==================== */
 drop.addEventListener('click', ()=> fileInput.click());
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
   e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
@@ -192,57 +305,65 @@ fileInput.addEventListener('change', ()=>{
   if (file) handleFile(file);
 });
 
+/* ==================== File Handle ==================== */
 function handleFile(file){
+  const T = I18N[lang].alerts;
+  // 4 MB sınırı (Vercel request body limiti)
+  if (file.size > 4 * 1024 * 1024) {
+    alert(T.tooBig);
+    return;
+  }
+
   if (mode === 'txt2pdf') {
-    if (!/\.txt$/i.test(file.name)) return alert('Lütfen .txt dosyası yükleyin.');
+    if (!/\.txt$/i.test(file.name)) return alert(T.txtOnly);
     const reader = new FileReader();
     reader.onload = ()=>{
       txt.value = reader.result;
       const base = (outName.value || file.name.replace(/\.txt$/i,'') || 'text');
-      fileInfo.textContent = `Yüklendi: ${file.name} → ${base}.pdf`;
+      fileInfo.textContent = `→ ${base}.pdf`;
       createPdf(txt.value, base);
     };
     reader.readAsText(file);
   } else {
-    if (!/\.pdf$/i.test(file.name)) return alert('Lütfen .pdf dosyası yükleyin.');
+    if (!/\.pdf$/i.test(file.name)) return alert(T.pdfOnly);
     const base = (outName.value || file.name.replace(/\.pdf$/i,'') || 'extracted');
-    fileInfo.textContent = `Yüklendi: ${file.name} → ${base}.txt`;
+    fileInfo.textContent = `→ ${base}.txt`;
     extractTextFromPdf(file, base);
   }
 }
 
-async function extractTextFromPdf(file, baseName){
-  actionBtn.disabled = true; actionBtn.textContent = 'Çıkarılıyor...';
+/* ==================== TXT → PDF ==================== */
+async function createPdf(text, baseName){
+  const T = I18N[lang].alerts;
+  if (!text.trim()) { alert(T.emptyText); return; }
+  actionBtn.disabled = true; actionBtn.textContent = (lang==='tr'?'Oluşturuluyor...':'Creating...');
   try{
-    const arrayBuf = await file.arrayBuffer();
-    const res = await fetch('/api/pdf-to-txt', {
+    const res = await fetch('/api/make-pdf', {
       method:'POST',
-      headers:{ 'Content-Type': 'application/pdf' },
-      body: arrayBuf
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, filename: baseName + '.pdf' })
     });
     if(!res.ok){
-      let msg = 'Sunucu hatası';
+      let msg = T.serverError;
       try { const j = await res.json(); msg = j.error || msg; } catch {}
       throw new Error(msg);
     }
-    const text = await res.text();
-    txt.value = text;
-    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = baseName + '.txt'; a.click();
+    a.href = url; a.download = baseName + '.pdf'; a.click();
     URL.revokeObjectURL(url);
   }catch(err){
-    alert('Metin çıkarılamadı: ' + err.message);
+    alert('PDF: ' + err.message);
   }finally{
-    actionBtn.disabled = false; actionBtn.textContent = (mode==='txt2pdf'?'PDF Oluştur ve İndir':'Metni Çıkar ve İndir (.txt)');
+    actionBtn.disabled = false; applyI18N();
   }
 }
 
-
-// RAW gönderim
+/* ==================== PDF → TXT (RAW) ==================== */
 async function extractTextFromPdf(file, baseName){
-  actionBtn.disabled = true; actionBtn.textContent = 'Çıkarılıyor...';
+  const T = I18N[lang].alerts;
+  actionBtn.disabled = true; actionBtn.textContent = (lang==='tr'?'Çıkarılıyor...':'Extracting...');
   try{
     const arrayBuf = await file.arrayBuffer();
     const res = await fetch('/api/pdf-to-txt', {
@@ -251,24 +372,23 @@ async function extractTextFromPdf(file, baseName){
       body: arrayBuf
     });
     if(!res.ok){
-      let msg = 'Sunucu hatası';
+      let msg = T.serverError;
       try { const j = await res.json(); msg = j.error || msg; } catch {}
       throw new Error(msg);
     }
-    const text = await res.text();
-    txt.value = text;
-    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const textRes = await res.text();
+    txt.value = textRes;
+    const blob = new Blob([textRes], {type:'text/plain;charset=utf-8'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = baseName + '.txt'; a.click();
     URL.revokeObjectURL(url);
   }catch(err){
-    alert('Metin çıkarılamadı: ' + err.message);
+    alert(I18N[lang].alerts.extractFail + ': ' + err.message);
   }finally{
-    actionBtn.disabled = false; actionBtn.textContent = (mode==='txt2pdf'?'PDF Oluştur ve İndir':'Metni Çıkar ve İndir (.txt)');
+    actionBtn.disabled = false; applyI18N();
   }
 }
 </script>
 </body>
 </html>
-
