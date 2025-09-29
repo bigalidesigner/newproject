@@ -44,9 +44,7 @@
     }
     .primary{background:linear-gradient(90deg,var(--acc1),var(--acc2)); color:#072315}
     .ghost{background:transparent; color:var(--text); border:1px dashed rgba(255,255,255,.25)}
-    .side{
-      display:flex; flex-direction:column; gap:14px;
-    }
+    .side{display:flex; flex-direction:column; gap:14px;}
     .panel{
       border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px; background:#0c0e13;
     }
@@ -73,10 +71,10 @@
 
     <div class="card">
       <div class="grid">
-        <!-- Sol: Editor / Çıktı -->
+        <!-- Sol taraf -->
         <div>
           <h1 id="title">TXT → PDF</h1>
-          <p class="sub" id="subtitle">Metni yaz / yapıştır ya da sağdaki kutuya .txt dosyası bırak. İndirme anında başlar.</p>
+          <p class="sub" id="subtitle">Metni yaz / yapıştır ya da sağdaki kutuya .txt dosyası bırak.</p>
 
           <form id="f">
             <textarea name="text" id="text" placeholder="Metni buraya yaz..."></textarea>
@@ -86,10 +84,10 @@
             </div>
           </form>
 
-          <p class="muted">İpucu: PDF → TXT modunda yüklediğin PDF’in metnini burada görüntüler ve .txt olarak indirirsin.</p>
+          <p class="muted">PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.</p>
         </div>
 
-        <!-- Sağ: Mod / Upload -->
+        <!-- Sağ taraf -->
         <div class="side">
           <div class="panel">
             <label for="mode">Dönüştürme Modu</label>
@@ -112,7 +110,7 @@
           <div class="panel">
             <label>Çıktı Dosya Adı (opsiyonel)</label>
             <input type="text" id="outName" placeholder="ör. my-file">
-            <div class="muted">Uzantı otomatik eklenecek (.pdf / .txt)</div>
+            <div class="muted">Uzantı otomatik eklenir (.pdf / .txt)</div>
           </div>
         </div>
       </div>
@@ -136,15 +134,13 @@ const outName = document.getElementById('outName');
 const actionBtn = document.getElementById('actionBtn');
 document.getElementById('y').textContent = new Date().getFullYear();
 
-let mode = 'txt2pdf'; // veya 'pdf2txt'
-let lastFilename = "text.pdf";
+let mode = 'txt2pdf';
 
-// --- Mod değişince UI'yi güncelle ---
 modeSel.addEventListener('change', ()=>{
   mode = modeSel.value;
   if (mode === 'txt2pdf') {
     title.textContent = 'TXT → PDF';
-    subtitle.innerHTML = 'Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak. İndirme anında başlar.';
+    subtitle.innerHTML = 'Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.';
     acceptLabel.textContent = '.txt';
     fileInput.accept = '.txt,text/plain';
     actionBtn.textContent = 'PDF Oluştur ve İndir';
@@ -153,7 +149,7 @@ modeSel.addEventListener('change', ()=>{
     fileInfo.textContent = '';
   } else {
     title.textContent = 'PDF → TXT';
-    subtitle.innerHTML = 'Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metni çıkaralım ve .txt olarak indirelim.';
+    subtitle.innerHTML = 'Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.';
     acceptLabel.textContent = '.pdf';
     fileInput.accept = '.pdf,application/pdf';
     actionBtn.textContent = 'Metni Çıkar ve İndir (.txt)';
@@ -163,37 +159,30 @@ modeSel.addEventListener('change', ()=>{
   }
 });
 
-// --- Form butonu ---
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
   const base = (outName.value || (mode === 'txt2pdf' ? 'text' : 'extracted')).trim();
   if (mode === 'txt2pdf') {
-    await createPdf(txt.value, base || 'text');
+    await createPdf(txt.value, base);
   } else {
-    if (!txt.value.trim()) { alert('PDF yükleyin; metin burada görünecek.'); }
+    if (!txt.value.trim()) alert('PDF yükleyip metin çıkarabilirsiniz.');
   }
 });
 
-// --- Temizle ---
 clearBtn.addEventListener('click', ()=>{
   txt.value = '';
   fileInfo.textContent = '';
   outName.value = '';
-  lastFilename = mode === 'txt2pdf' ? 'text.pdf' : 'extracted.txt';
 });
 
-// --- Drop alanı – tıkla ---
 drop.addEventListener('click', ()=> fileInput.click());
-
-// --- Drag & drop efektleri ---
-;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
   e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
 }));
-;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e=>{
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e=>{
   e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
 }));
 
-// --- Dosya seçimi / bırakılması ---
 drop.addEventListener('drop', (e)=>{
   const file = e.dataTransfer.files?.[0];
   if (file) handleFile(file);
@@ -203,7 +192,6 @@ fileInput.addEventListener('change', ()=>{
   if (file) handleFile(file);
 });
 
-// --- Dosya işle ---
 function handleFile(file){
   if (mode === 'txt2pdf') {
     if (!/\.txt$/i.test(file.name)) return alert('Lütfen .txt dosyası yükleyin.');
@@ -211,23 +199,18 @@ function handleFile(file){
     reader.onload = ()=>{
       txt.value = reader.result;
       const base = (outName.value || file.name.replace(/\.txt$/i,'') || 'text');
-      lastFilename = base + '.pdf';
-      fileInfo.textContent = `Yüklendi: ${file.name} → İndirilecek: ${lastFilename}`;
-      // Otomatik PDF üret
+      fileInfo.textContent = `Yüklendi: ${file.name} → ${base}.pdf`;
       createPdf(txt.value, base);
     };
     reader.readAsText(file);
   } else {
     if (!/\.pdf$/i.test(file.name)) return alert('Lütfen .pdf dosyası yükleyin.');
     const base = (outName.value || file.name.replace(/\.pdf$/i,'') || 'extracted');
-    lastFilename = base + '.txt';
-    fileInfo.textContent = `Yüklendi: ${file.name} → İndirilecek: ${lastFilename}`;
-    // PDF → TXT API çağrısı
+    fileInfo.textContent = `Yüklendi: ${file.name} → ${base}.txt`;
     extractTextFromPdf(file, base);
   }
 }
 
-// --- TXT → PDF ---
 async function createPdf(text, baseName){
   if (!text.trim()) { alert('Metin boş.'); return; }
   actionBtn.disabled = true; actionBtn.textContent = 'Oluşturuluyor...';
@@ -254,13 +237,16 @@ async function createPdf(text, baseName){
   }
 }
 
-// --- PDF → TXT ---
+// RAW gönderim
 async function extractTextFromPdf(file, baseName){
   actionBtn.disabled = true; actionBtn.textContent = 'Çıkarılıyor...';
   try{
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await fetch('/api/pdf-to-txt', { method:'POST', body: fd });
+    const arrayBuf = await file.arrayBuffer();
+    const res = await fetch('/api/pdf-to-txt', {
+      method:'POST',
+      headers:{ 'Content-Type': 'application/pdf' },
+      body: arrayBuf
+    });
     if(!res.ok){
       let msg = 'Sunucu hatası';
       try { const j = await res.json(); msg = j.error || msg; } catch {}
