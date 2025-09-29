@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
   <title>Text ↔ PDF Converter • Yasmer PDF</title>
   <meta name="description" content="TXT → PDF and PDF → TXT conversion. Upload your file and download instantly. Free.">
+
+  <!-- ✅ GOOGLE SEARCH CONSOLE DOĞRULAMA -->
+  <meta name="google-site-verification" content="9DgO4s1UbA0JmVqN1FtmTffUscW_92JFt-85KHFgnLs" />
+
   <meta name="theme-color" content="#0a0b0f">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -159,7 +163,7 @@
     <footer>© <span id="y"></span> Yasmer PDF • Hosted on Vercel</footer>
   </div>
 
-  <!-- ===== JS: Aynı fonksiyonlar + SW register + A2HS ===== -->
+  <!-- ===== JS: PWA + Service Worker + App Logic ===== -->
   <script>
   // A2HS
   let deferredPrompt; const installBtn = document.getElementById('installBtn');
@@ -177,16 +181,8 @@
         .catch(err => console.error('SW register failed', err));
     });
   }
-  </script>
 
-  <!-- Senin mevcut uygulama JS'in (i18n + api) -->
-  <script>
-  /* ==== (BURADA SANA VERDİĞİM SON JS BLOĞU AYNEN DURUYOR) ==== */
-  /* ... tamamını buraya aynen yapıştırdım, kısaltmıyorum ki çalışsın ... */
-
-  /* ==================== i18n ==================== */
-  const I18N = {/* >>> burada önceki cevapta verdiğim I18N objesinin tamamı <<< */};
-  //  ——— KISALTMA: Yukarıdaki uzun JS’ini aynen koru. Çalışan sürümünü zaten kullanıyorsun. ———
+  /* ==== Buraya senin mevcut uzun i18n ve API JS kodlarını aynen ekle ==== */
   </script>
 </body>
 </html>
