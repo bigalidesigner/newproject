@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Metni PDF'e Çevir • Yasmer PDF</title>
-  <meta name="description" content="Metni yaz veya .txt dosyası yükle, tek tıkla PDF indir. Hızlı, ücretsiz.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23fff' d='M14 8h22l14 14v34a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z'/%3E%3Cpath fill='%2300d084' d='M36 8v12a4 4 0 0 0 4 4h12'/%3E%3Ctext x='18' y='47' font-size='18' font-family='Arial' fill='%2300d084'%3EPDF%3C/text%3E%3C/svg%3E">
+  <title>Metin ↔ PDF Dönüştürücü • Yasmer PDF</title>
+  <meta name="description" content="TXT → PDF ve PDF → TXT dönüşümü. Dosyanı yükle, anında indir. Ücretsiz.">
   <style>
     :root{
       --bg:#0a0b0f; --card:#0f1117; --muted:#a6b0c3; --text:#e6e9ef;
@@ -45,8 +44,18 @@
     }
     .primary{background:linear-gradient(90deg,var(--acc1),var(--acc2)); color:#072315}
     .ghost{background:transparent; color:var(--text); border:1px dashed rgba(255,255,255,.25)}
+    .side{
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .panel{
+      border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px; background:#0c0e13;
+    }
+    .panel label{display:block; font-size:14px; color:var(--muted); margin-bottom:6px}
+    select, input[type="text"]{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b0d12; color:var(--text);
+    }
     .drop{
-      border:1.5px dashed rgba(255,255,255,.25); border-radius:12px; padding:16px; text-align:center;
+      border:1.5px dashed rgba(255,255,255,.25); border-radius:12px; padding:18px; text-align:center;
       background:rgba(255,255,255,.02);
     }
     .drop.drag{border-color:var(--acc1); background:rgba(0,208,132,.06)}
@@ -58,37 +67,53 @@
 <body>
   <div class="shell">
     <header>
-      <div class="logo">
-        <img alt="" width="28" height="28" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23fff' d='M14 8h22l14 14v34a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z'/%3E%3Cpath fill='%2300d084' d='M36 8v12a4 4 0 0 0 4 4h12'/%3E%3C/svg%3E">
-        <strong>Yasmer <span>PDF</span></strong>
-      </div>
+      <div class="logo"><strong>Yasmer <span>PDF</span></strong></div>
       <div class="badge">Ücretsiz • Hızlı</div>
     </header>
 
     <div class="card">
       <div class="grid">
-        <!-- Sol: Text area -->
+        <!-- Sol: Editor / Çıktı -->
         <div>
-          <h1>Metni PDF’e çevir</h1>
-          <p class="sub">Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyasını bırak. İndirme anında başlar.</p>
+          <h1 id="title">TXT → PDF</h1>
+          <p class="sub" id="subtitle">Metni yaz / yapıştır ya da sağdaki kutuya .txt dosyası bırak. İndirme anında başlar.</p>
+
           <form id="f">
-            <textarea name="text" id="text" placeholder="Metni buraya yaz veya .txt dosyası yükle..."></textarea>
+            <textarea name="text" id="text" placeholder="Metni buraya yaz..."></textarea>
             <div class="actions">
-              <button class="primary" type="submit">PDF Oluştur ve İndir</button>
+              <button class="primary" type="submit" id="actionBtn">PDF Oluştur ve İndir</button>
               <button class="ghost" type="button" id="clearBtn">Temizle</button>
             </div>
           </form>
-          <p class="muted">İpucu: Yüklemeden önce metni görebilirsin; istersen düzenleyip öyle indir.</p>
+
+          <p class="muted">İpucu: PDF → TXT modunda yüklediğin PDF’in metnini burada görüntüler ve .txt olarak indirirsin.</p>
         </div>
 
-        <!-- Sağ: Drag & Drop alanı -->
-        <div>
-          <div id="drop" class="drop">
-            <strong>.txt</strong> dosyanı buraya bırak<br/>
-            <span class="muted">veya tıkla seç</span>
-            <input id="file" type="file" accept=".txt,text/plain" hidden>
+        <!-- Sağ: Mod / Upload -->
+        <div class="side">
+          <div class="panel">
+            <label for="mode">Dönüştürme Modu</label>
+            <select id="mode">
+              <option value="txt2pdf" selected>TXT → PDF</option>
+              <option value="pdf2txt">PDF → TXT</option>
+            </select>
           </div>
-          <div style="margin-top:10px" class="muted" id="fileInfo"></div>
+
+          <div class="panel">
+            <label>Dosya Yükle (Sürükle & Bırak)</label>
+            <div id="drop" class="drop">
+              <strong id="acceptLabel">.txt</strong> dosyanı buraya bırak<br/>
+              <span class="muted">veya tıkla seç</span>
+              <input id="file" type="file" accept=".txt,text/plain" hidden>
+            </div>
+            <div style="margin-top:10px" class="muted" id="fileInfo"></div>
+          </div>
+
+          <div class="panel">
+            <label>Çıktı Dosya Adı (opsiyonel)</label>
+            <input type="text" id="outName" placeholder="ör. my-file">
+            <div class="muted">Uzantı otomatik eklenecek (.pdf / .txt)</div>
+          </div>
         </div>
       </div>
     </div>
@@ -103,27 +128,64 @@ const clearBtn = document.getElementById('clearBtn');
 const drop = document.getElementById('drop');
 const fileInput = document.getElementById('file');
 const fileInfo = document.getElementById('fileInfo');
+const modeSel = document.getElementById('mode');
+const title = document.getElementById('title');
+const subtitle = document.getElementById('subtitle');
+const acceptLabel = document.getElementById('acceptLabel');
+const outName = document.getElementById('outName');
+const actionBtn = document.getElementById('actionBtn');
 document.getElementById('y').textContent = new Date().getFullYear();
 
+let mode = 'txt2pdf'; // veya 'pdf2txt'
 let lastFilename = "text.pdf";
 
-// Formdan gönder
-form.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  await createPdf(txt.value, lastFilename.replace(/\.pdf$/i,'') || 'text');
+// --- Mod değişince UI'yi güncelle ---
+modeSel.addEventListener('change', ()=>{
+  mode = modeSel.value;
+  if (mode === 'txt2pdf') {
+    title.textContent = 'TXT → PDF';
+    subtitle.innerHTML = 'Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak. İndirme anında başlar.';
+    acceptLabel.textContent = '.txt';
+    fileInput.accept = '.txt,text/plain';
+    actionBtn.textContent = 'PDF Oluştur ve İndir';
+    txt.placeholder = 'Metni buraya yaz...';
+    txt.value = '';
+    fileInfo.textContent = '';
+  } else {
+    title.textContent = 'PDF → TXT';
+    subtitle.innerHTML = 'Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metni çıkaralım ve .txt olarak indirelim.';
+    acceptLabel.textContent = '.pdf';
+    fileInput.accept = '.pdf,application/pdf';
+    actionBtn.textContent = 'Metni Çıkar ve İndir (.txt)';
+    txt.placeholder = 'Çıkarılan metin burada görünecek...';
+    txt.value = '';
+    fileInfo.textContent = '';
+  }
 });
 
-// Temizle
+// --- Form butonu ---
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const base = (outName.value || (mode === 'txt2pdf' ? 'text' : 'extracted')).trim();
+  if (mode === 'txt2pdf') {
+    await createPdf(txt.value, base || 'text');
+  } else {
+    if (!txt.value.trim()) { alert('PDF yükleyin; metin burada görünecek.'); }
+  }
+});
+
+// --- Temizle ---
 clearBtn.addEventListener('click', ()=>{
   txt.value = '';
   fileInfo.textContent = '';
-  lastFilename = 'text.pdf';
+  outName.value = '';
+  lastFilename = mode === 'txt2pdf' ? 'text.pdf' : 'extracted.txt';
 });
 
-// Drop alanı – tıkla
+// --- Drop alanı – tıkla ---
 drop.addEventListener('click', ()=> fileInput.click());
 
-// Drag & drop efektleri
+// --- Drag & drop efektleri ---
 ;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
   e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
 }));
@@ -131,7 +193,7 @@ drop.addEventListener('click', ()=> fileInput.click());
   e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
 }));
 
-// Dosya seçilince/ bırakılınca
+// --- Dosya seçimi / bırakılması ---
 drop.addEventListener('drop', (e)=>{
   const file = e.dataTransfer.files?.[0];
   if (file) handleFile(file);
@@ -141,35 +203,45 @@ fileInput.addEventListener('change', ()=>{
   if (file) handleFile(file);
 });
 
-// .txt dosyasını oku ve metni textarea’ya yaz
+// --- Dosya işle ---
 function handleFile(file){
-  if (!file.name.toLowerCase().endsWith('.txt')) {
-    alert('Lütfen .txt dosyası yükleyin.');
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    txt.value = reader.result;
-    lastFilename = (file.name.replace(/\.txt$/i,'') || 'text') + '.pdf';
+  if (mode === 'txt2pdf') {
+    if (!/\.txt$/i.test(file.name)) return alert('Lütfen .txt dosyası yükleyin.');
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      txt.value = reader.result;
+      const base = (outName.value || file.name.replace(/\.txt$/i,'') || 'text');
+      lastFilename = base + '.pdf';
+      fileInfo.textContent = `Yüklendi: ${file.name} → İndirilecek: ${lastFilename}`;
+      // Otomatik PDF üret
+      createPdf(txt.value, base);
+    };
+    reader.readAsText(file);
+  } else {
+    if (!/\.pdf$/i.test(file.name)) return alert('Lütfen .pdf dosyası yükleyin.');
+    const base = (outName.value || file.name.replace(/\.pdf$/i,'') || 'extracted');
+    lastFilename = base + '.txt';
     fileInfo.textContent = `Yüklendi: ${file.name} → İndirilecek: ${lastFilename}`;
-    // Otomatik PDF üret: dosya düşer düşmez
-    createPdf(txt.value, lastFilename.replace(/\.pdf$/i,''));
-  };
-  reader.readAsText(file);
+    // PDF → TXT API çağrısı
+    extractTextFromPdf(file, base);
+  }
 }
 
-// Sunucuya gönder ve indir
+// --- TXT → PDF ---
 async function createPdf(text, baseName){
   if (!text.trim()) { alert('Metin boş.'); return; }
-  const btn = form.querySelector('button.primary');
-  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+  actionBtn.disabled = true; actionBtn.textContent = 'Oluşturuluyor...';
   try{
     const res = await fetch('/api/make-pdf', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ text, filename: baseName + '.pdf' })
     });
-    if(!res.ok) throw new Error('Sunucu hatası');
+    if(!res.ok){
+      let msg = 'Sunucu hatası';
+      try { const j = await res.json(); msg = j.error || msg; } catch {}
+      throw new Error(msg);
+    }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -178,7 +250,33 @@ async function createPdf(text, baseName){
   }catch(err){
     alert('PDF oluşturulamadı: ' + err.message);
   }finally{
-    btn.disabled = false; btn.textContent = 'PDF Oluştur ve İndir';
+    actionBtn.disabled = false; actionBtn.textContent = (mode==='txt2pdf'?'PDF Oluştur ve İndir':'Metni Çıkar ve İndir (.txt)');
+  }
+}
+
+// --- PDF → TXT ---
+async function extractTextFromPdf(file, baseName){
+  actionBtn.disabled = true; actionBtn.textContent = 'Çıkarılıyor...';
+  try{
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/pdf-to-txt', { method:'POST', body: fd });
+    if(!res.ok){
+      let msg = 'Sunucu hatası';
+      try { const j = await res.json(); msg = j.error || msg; } catch {}
+      throw new Error(msg);
+    }
+    const text = await res.text();
+    txt.value = text;
+    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = baseName + '.txt'; a.click();
+    URL.revokeObjectURL(url);
+  }catch(err){
+    alert('Metin çıkarılamadı: ' + err.message);
+  }finally{
+    actionBtn.disabled = false; actionBtn.textContent = (mode==='txt2pdf'?'PDF Oluştur ve İndir':'Metni Çıkar ve İndir (.txt)');
   }
 }
 </script>
