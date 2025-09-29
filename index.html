@@ -3,54 +3,184 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Text → PDF</title>
+  <title>Metni PDF'e Çevir • Yasmer PDF</title>
+  <meta name="description" content="Metni yaz veya .txt dosyası yükle, tek tıkla PDF indir. Hızlı, ücretsiz.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23fff' d='M14 8h22l14 14v34a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z'/%3E%3Cpath fill='%2300d084' d='M36 8v12a4 4 0 0 0 4 4h12'/%3E%3Ctext x='18' y='47' font-size='18' font-family='Arial' fill='%2300d084'%3EPDF%3C/text%3E%3C/svg%3E">
   <style>
-    body{font:16px/1.5 system-ui,Segoe UI,Arial;margin:0;background:#0b0b0b;color:#e6e6e6}
-    .wrap{max-width:800px;margin:40px auto;padding:24px;border:1px solid #2a2a2a;border-radius:12px;background:#121212}
-    h1{margin-top:0}
-    textarea{width:100%;min-height:260px;padding:12px;border-radius:10px;border:1px solid #333;background:#0f0f0f;color:#e6e6e6;resize:vertical}
-    button{margin-top:12px;padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .note{font-size:13px;color:#aaa}
+    :root{
+      --bg:#0a0b0f; --card:#0f1117; --muted:#a6b0c3; --text:#e6e9ef;
+      --acc1:#00d084; --acc2:#2dd4bf;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font:16px/1.6 system-ui,Segoe UI,Inter,Arial; color:var(--text);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(0,208,132,.09), transparent 40%),
+                  radial-gradient(1000px 600px at 90% 10%, rgba(45,212,191,.08), transparent 35%),
+                  var(--bg);
+      display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    .shell{width:100%; max-width:980px}
+    header{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px}
+    .logo{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+    .logo span{background:linear-gradient(90deg,var(--acc1),var(--acc2)); -webkit-background-clip:text; color:transparent}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:22px; box-shadow:0 10px 40px rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+    }
+    .grid{display:grid; grid-template-columns:1.2fr .8fr; gap:18px}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+    h1{margin:8px 0 6px; font-size:28px}
+    p.sub{margin:0 0 16px; color:var(--muted)}
+    textarea{
+      width:100%; min-height:300px; padding:14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.1); background:#0c0e13; color:var(--text);
+      outline:none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+    }
+    .actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+    button, .ghost{
+      border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer;
+    }
+    .primary{background:linear-gradient(90deg,var(--acc1),var(--acc2)); color:#072315}
+    .ghost{background:transparent; color:var(--text); border:1px dashed rgba(255,255,255,.25)}
+    .drop{
+      border:1.5px dashed rgba(255,255,255,.25); border-radius:12px; padding:16px; text-align:center;
+      background:rgba(255,255,255,.02);
+    }
+    .drop.drag{border-color:var(--acc1); background:rgba(0,208,132,.06)}
+    .muted{color:var(--muted); font-size:14px}
+    footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center}
+    .badge{display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:12px; background:rgba(0,208,132,.12); color:#8bf0c8; border:1px solid rgba(0,208,132,.3)}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Metni PDF'e Çevir</h1>
-    <p class="note">Metni gir → PDF indir. Sunucu: Vercel Serverless.</p>
-    <form id="f">
-      <textarea name="text" placeholder="Metni buraya yaz..."></textarea>
-      <button type="submit">PDF Oluştur ve İndir</button>
-    </form>
+  <div class="shell">
+    <header>
+      <div class="logo">
+        <img alt="" width="28" height="28" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23fff' d='M14 8h22l14 14v34a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V12a4 4 0 0 1 4-4z'/%3E%3Cpath fill='%2300d084' d='M36 8v12a4 4 0 0 0 4 4h12'/%3E%3C/svg%3E">
+        <strong>Yasmer <span>PDF</span></strong>
+      </div>
+      <div class="badge">Ücretsiz • Hızlı</div>
+    </header>
+
+    <div class="card">
+      <div class="grid">
+        <!-- Sol: Text area -->
+        <div>
+          <h1>Metni PDF’e çevir</h1>
+          <p class="sub">Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyasını bırak. İndirme anında başlar.</p>
+          <form id="f">
+            <textarea name="text" id="text" placeholder="Metni buraya yaz veya .txt dosyası yükle..."></textarea>
+            <div class="actions">
+              <button class="primary" type="submit">PDF Oluştur ve İndir</button>
+              <button class="ghost" type="button" id="clearBtn">Temizle</button>
+            </div>
+          </form>
+          <p class="muted">İpucu: Yüklemeden önce metni görebilirsin; istersen düzenleyip öyle indir.</p>
+        </div>
+
+        <!-- Sağ: Drag & Drop alanı -->
+        <div>
+          <div id="drop" class="drop">
+            <strong>.txt</strong> dosyanı buraya bırak<br/>
+            <span class="muted">veya tıkla seç</span>
+            <input id="file" type="file" accept=".txt,text/plain" hidden>
+          </div>
+          <div style="margin-top:10px" class="muted" id="fileInfo"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>© <span id="y"></span> Yasmer PDF • Vercel üzerinde barındırılıyor</footer>
   </div>
 
 <script>
 const form = document.getElementById('f');
+const txt = document.getElementById('text');
+const clearBtn = document.getElementById('clearBtn');
+const drop = document.getElementById('drop');
+const fileInput = document.getElementById('file');
+const fileInfo = document.getElementById('fileInfo');
+document.getElementById('y').textContent = new Date().getFullYear();
+
+let lastFilename = "text.pdf";
+
+// Formdan gönder
 form.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const btn = form.querySelector('button');
-  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
-  const text = new FormData(form).get('text') || '';
+  await createPdf(txt.value, lastFilename.replace(/\.pdf$/i,'') || 'text');
+});
 
-  try {
-    // JSON post ediyoruz (api hem JSON hem query destekli)
+// Temizle
+clearBtn.addEventListener('click', ()=>{
+  txt.value = '';
+  fileInfo.textContent = '';
+  lastFilename = 'text.pdf';
+});
+
+// Drop alanı – tıkla
+drop.addEventListener('click', ()=> fileInput.click());
+
+// Drag & drop efektleri
+;['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
+  e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
+}));
+;['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e=>{
+  e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
+}));
+
+// Dosya seçilince/ bırakılınca
+drop.addEventListener('drop', (e)=>{
+  const file = e.dataTransfer.files?.[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', ()=>{
+  const file = fileInput.files?.[0];
+  if (file) handleFile(file);
+});
+
+// .txt dosyasını oku ve metni textarea’ya yaz
+function handleFile(file){
+  if (!file.name.toLowerCase().endsWith('.txt')) {
+    alert('Lütfen .txt dosyası yükleyin.');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    txt.value = reader.result;
+    lastFilename = (file.name.replace(/\.txt$/i,'') || 'text') + '.pdf';
+    fileInfo.textContent = `Yüklendi: ${file.name} → İndirilecek: ${lastFilename}`;
+    // Otomatik PDF üret: dosya düşer düşmez
+    createPdf(txt.value, lastFilename.replace(/\.pdf$/i,''));
+  };
+  reader.readAsText(file);
+}
+
+// Sunucuya gönder ve indir
+async function createPdf(text, baseName){
+  if (!text.trim()) { alert('Metin boş.'); return; }
+  const btn = form.querySelector('button.primary');
+  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+  try{
     const res = await fetch('/api/make-pdf', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ text })
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, filename: baseName + '.pdf' })
     });
     if(!res.ok) throw new Error('Sunucu hatası');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'metin.pdf'; a.click();
+    a.href = url; a.download = baseName + '.pdf'; a.click();
     URL.revokeObjectURL(url);
-  } catch (err) {
+  }catch(err){
     alert('PDF oluşturulamadı: ' + err.message);
-  } finally {
+  }finally{
     btn.disabled = false; btn.textContent = 'PDF Oluştur ve İndir';
   }
-});
+}
 </script>
 </body>
 </html>
