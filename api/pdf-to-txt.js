@@ -1,4 +1,5 @@
-import pdfParse from "pdf-parse";
+// /api/pdf-to-txt.js
+import pdf from "pdf-parse/lib/pdf-parse.js"; // <-- kritik: doğrudan fonksiyon dosyası
 
 export const config = { api: { bodyParser: false } };
 
@@ -24,9 +25,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // pdf-parse doğrudan Buffer alabilir
-    const data = await pdfParse(buf);
-    const text = (data && data.text) ? data.text.trim() : "";
+    // pdf-parse Buffer ile direkt çalışır
+    const data = await pdf(buf);
+    const text = (data?.text || "").trim();
 
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", 'attachment; filename="extracted.txt"');
