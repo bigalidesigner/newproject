@@ -1,5 +1,3 @@
-// Vercel Serverless Function (Node.js)
-// URL: /api/make-pdf
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 export default async function handler(req, res) {
@@ -8,16 +6,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  const contentType = req.headers["content-type"] || "";
-  let text = "";
+  const ct = req.headers["content-type"] || "";
+  let text = "", filename = "text.pdf";
 
-  // JSON ya da form-data kabul edelim
-  if (contentType.includes("application/json")) {
+  if (ct.includes("application/json")) {
     const body = req.body || {};
     text = (body.text || "").toString();
+    const raw = (body.filename || "").toString().trim();
+    if (raw) {
+      // .pdf uzantısı yoksa ekle
+      filename = raw.toLowerCase().endsWith(".pdf") ? raw : `${raw}.pdf`;
+    }
   } else {
-    // Vercel body-parser form-data’yı otomatik çevirmez; basitçe raw alalım
-    // Kolaylık için query param desteği de bırakıyorum: /api/make-pdf?text=...
     text = (req.query.text || "").toString();
   }
 
@@ -26,77 +26,56 @@ export default async function handler(req, res) {
     return;
   }
 
-  // A4 (pt): 595 x 842
   const pdfDoc = await PDFDocument.create();
-  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-  const margin = 50;
-  const fontSize = 12;
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const margin = 50, fontSize = 12;
   let page = pdfDoc.addPage([595.28, 841.89]);
   let { width, height } = page.getSize();
   let y = height - margin;
-
-  // basit kelime-kaydırma
   const maxWidth = width - margin * 2;
-  const paragraphs = text.split(/\r?\n/);
 
-  function wrapLine(line) {
+  const paragraphs = text.split(/\r?\n/);
+  const wrap = (line) => {
     const words = line.split(" ");
     const lines = [];
     let cur = "";
     for (const w of words) {
       const test = cur ? cur + " " + w : w;
-      const wpx = helvetica.widthOfTextAtSize(test, fontSize);
-      if (wpx <= maxWidth) cur = test;
-      else {
+      if (font.widthOfTextAtSize(test, fontSize) <= maxWidth) {
+        cur = test;
+      } else {
         if (cur) lines.push(cur);
-        // çok uzun tek kelime kırılması
-        if (helvetica.widthOfTextAtSize(w, fontSize) > maxWidth) {
-          let tmp = "";
+        if (font.widthOfTextAtSize(w, fontSize) > maxWidth) {
+          let chunk = "";
           for (const ch of w) {
-            const t2 = tmp + ch;
-            if (helvetica.widthOfTextAtSize(t2, fontSize) <= maxWidth) tmp = t2;
-            else {
-              if (tmp) lines.push(tmp);
-              tmp = ch;
-            }
+            const t2 = chunk + ch;
+            if (font.widthOfTextAtSize(t2, fontSize) <= maxWidth) chunk = t2;
+            else { if (chunk) lines.push(chunk); chunk = ch; }
           }
-          cur = tmp;
+          cur = chunk;
         } else {
           cur = w;
         }
       }
     }
     if (cur) lines.push(cur);
-    return lines;
-  }
+    return lines.length ? lines : [" "];
+  };
 
-  const allLines = [];
   for (const p of paragraphs) {
-    const wrapped = wrapLine(p);
-    if (wrapped.length === 0) allLines.push(" "); // boş satır
-    else allLines.push(...wrapped);
-  }
-
-  for (const ln of allLines) {
-    // yeni sayfa kontrolü
-    if (y < margin + fontSize) {
-      page = pdfDoc.addPage([595.28, 841.89]);
-      ({ width, height } = page.getSize());
-      y = height - margin;
+    for (const line of wrap(p)) {
+      if (y < margin + fontSize) {
+        page = pdfDoc.addPage([595.28, 841.89]);
+        ({ width, height } = page.getSize());
+        y = height - margin;
+      }
+      page.drawText(line, { x: margin, y, size: fontSize, font, color: rgb(0,0,0) });
+      y -= fontSize + 4;
     }
-    page.drawText(ln, {
-      x: margin,
-      y,
-      size: fontSize,
-      font: helvetica,
-      color: rgb(0, 0, 0),
-    });
-    y -= fontSize + 4;
   }
 
   const bytes = await pdfDoc.save();
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", 'attachment; filename="text.pdf"');
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   res.send(Buffer.from(bytes));
 }
