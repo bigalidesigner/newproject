@@ -1,278 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TXT ↔ PDF • Yasmer PDF</title>
-<style>
-:root{
-  --bg:#0a0b0f; --card:#0f1117; --muted:#a6b0c3; --text:#e6e9ef;
-  --acc1:#00d084; --acc2:#2dd4bf;
-}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0; font:16px/1.6 system-ui,Segoe UI,Inter,Arial; color:var(--text);
-  background: radial-gradient(1200px 600px at 20% 0%, rgba(0,208,132,.09), transparent 40%),
-              radial-gradient(1000px 600px at 90% 10%, rgba(45,212,191,.08), transparent 35%),
-              var(--bg);
-  display:flex; align-items:center; justify-content:center; padding:32px;
-}
-.shell{width:100%; max-width:980px}
-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px}
-.logo{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
-.logo span{background:linear-gradient(90deg,var(--acc1),var(--acc2)); -webkit-background-clip:text; color:transparent}
-/* bayraklar */
-.flags{display:flex; gap:10px; margin-left:auto}
-.flag{
-  cursor:pointer; padding:0; border:0; background:transparent;
-  width:28px; height:20px; border-radius:3px; overflow:hidden;
-  filter:grayscale(60%); outline:none;
-}
-.flag.active{filter:none; box-shadow:0 0 0 2px rgba(255,255,255,.25) inset}
-.flag svg{display:block; width:100%; height:100%}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text ↔ PDF Converter • Yasmer PDF</title>
+  <meta name="description" content="TXT → PDF and PDF → TXT conversion. Upload your file and download instantly. Free.">
+  <style>
+    :root{
+      --bg:#0a0b0f; --card:#0f1117; --muted:#a6b0c3; --text:#e6e9ef;
+      --acc1:#00d084; --acc2:#2dd4bf;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font:16px/1.6 system-ui,Segoe UI,Inter,Arial; color:var(--text);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(0,208,132,.09), transparent 40%),
+                  radial-gradient(1000px 600px at 90% 10%, rgba(45,212,191,.08), transparent 35%),
+                  var(--bg);
+      display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    .shell{width:100%; max-width:980px}
 
-.card{
-  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px; padding:22px; box-shadow:0 10px 40px rgba(0,0,0,.35);
-  backdrop-filter: blur(8px);
-}
-.grid{display:grid; grid-template-columns:1.2fr .8fr; gap:18px}
-@media (max-width:600px){
-  body{padding:16px}
-  .grid{grid-template-columns:1fr; gap:20px}
-  textarea{min-height:220px}
-  .actions{flex-direction:column}
-  .actions button{width:100%}
-  .side{gap:16px}
-  .panel{padding:12px}
-  .logo{font-size:18px}
-}
-  
-.actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
-button, .ghost{
-  border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer;
-}
-.primary{background:linear-gradient(90deg,var(--acc1),var(--acc2)); color:#072315}
-.ghost{background:transparent; color:var(--text); border:1px dashed rgba(255,255,255,.25)}
-.side{display:flex; flex-direction:column; gap:14px;}
-.panel{
-  border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px; background:#0c0e13;
-}
-.panel label{display:block; font-size:14px; color:var(--muted); margin-bottom:6px}
-select, input[type="text"]{
-  width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b0d12; color:var(--text);
-}
-.drop{
-  border:1.5px dashed rgba(255,255,255,.25); border-radius:12px; padding:18px; text-align:center;
-  background:rgba(255,255,255,.02);
-}
-.drop.drag{border-color:var(--acc1); background:rgba(0,208,132,.06)}
-.muted{color:var(--muted); font-size:14px}
-footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center}
-</style>
+    /* Header + flags */
+    header{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px}
+    .logo{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
+    .logo span{background:linear-gradient(90deg,var(--acc1),var(--acc2)); -webkit-background-clip:text; color:transparent}
+    .flags{display:flex; gap:10px; margin-left:auto}
+    .flag{
+      cursor:pointer; padding:0; border:0; background:transparent;
+      width:28px; height:20px; border-radius:3px; overflow:hidden;
+      filter:grayscale(60%); outline:none;
+    }
+    .flag.active{filter:none; box-shadow:0 0 0 2px rgba(255,255,255,.25) inset}
+    .flag svg{display:block; width:100%; height:100%}
+
+    /* Card */
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px; padding:22px; box-shadow:0 10px 40px rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+    }
+
+    /* GRID: desktop */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      grid-template-areas: "main side";
+      gap:24px;
+    }
+    .main{ grid-area: main; }
+    .side{ grid-area: side; display:flex; flex-direction:column; gap:14px; }
+
+    h1{margin:8px 0 6px; font-size:28px}
+    p.sub{margin:0 0 16px; color:var(--muted)}
+
+    textarea{
+      width:100%; min-height:300px; padding:14px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.1); background:#0c0e13; color:var(--text);
+      outline:none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+    }
+
+    .actions{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap }
+    button, .ghost{
+      border:0; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer;
+    }
+    .primary{background:linear-gradient(90deg,var(--acc1),var(--acc2)); color:#072315}
+    .ghost{background:transparent; color:var(--text); border:1px dashed rgba(255,255,255,.25)}
+
+    .panel{
+      border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px; background:#0c0e13;
+    }
+    .panel label{display:block; font-size:14px; color:var(--muted); margin-bottom:6px}
+    select, input[type="text"]{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15); background:#0b0d12; color:var(--text);
+    }
+    .drop{
+      border:1.5px dashed rgba(255,255,255,.25); border-radius:12px; padding:18px; text-align:center;
+      background:rgba(255,255,255,.02);
+    }
+    .drop.drag{border-color:var(--acc1); background:rgba(0,208,132,.06)}
+    .muted{color:var(--muted); font-size:14px}
+    footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center}
+
+    /* —— MOBILE LAYOUT —— */
+    @media (max-width:720px){
+      body{ padding:14px }
+      .card{ padding:16px; border-radius:14px }
+      .grid{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "side"
+          "main";
+        gap:18px;
+      }
+      h1{ font-size:24px; margin:6px 0 }
+      p.sub{ font-size:14px }
+      .panel{ padding:12px }
+      select, input[type="text"]{ padding:10px 12px; font-size:15px }
+      textarea{ min-height:280px; font-size:15px }
+      .actions{ flex-direction:column; gap:8px }
+      .actions button{ width:100%; padding:13px 16px; font-size:16px }
+    }
+    @media (max-width:380px){
+      textarea{ min-height:240px }
+      .panel label{ font-size:13px }
+      .muted{ font-size:12.5px }
+    }
+  </style>
 </head>
 <body>
-<div class="shell">
-
-  <!-- Üst kısım -->
-  <header>
-    <div class="logo"><strong>Yasmer <span>PDF</span></strong></div>
-    <div class="flags">
-      <!-- UK -->
-      <button id="flag-en" class="flag active" aria-label="English">
-        <svg viewBox="0 0 60 40">
-          <clipPath id="ukc"><rect width="60" height="40" rx="2"/></clipPath>
-          <g clip-path="url(#ukc)">
-            <rect width="60" height="40" fill="#012169"/>
-            <path d="M0,0 60,40 M60,0 0,40" stroke="#fff" stroke-width="8"/>
-            <path d="M0,0 60,40 M60,0 0,40" stroke="#C8102E" stroke-width="4"/>
-            <rect x="26" width="8" height="40" fill="#fff"/>
-            <rect y="16" width="60" height="8" fill="#fff"/>
-            <rect x="28" width="4" height="40" fill="#C8102E"/>
-            <rect y="18" width="60" height="4" fill="#C8102E"/>
-          </g>
-        </svg>
-      </button>
-
-      <!-- TR -->
-      <button id="flag-tr" class="flag" aria-label="Türkçe">
-        <svg viewBox="0 0 60 40">
-          <rect width="60" height="40" rx="2" fill="#E30A17"/>
-          <circle cx="26" cy="20" r="10" fill="#fff"/>
-          <circle cx="28.8" cy="20" r="8" fill="#E30A17"/>
-          <path d="M38 20 l7 -4 l-2.7 8.3 l-2.7 -8.3 l7 4 l-8.6 0" fill="#fff"/>
-        </svg>
-      </button>
-    </div>
-  </header>
-
-  <!-- Ana içerik -->
-  <div class="card">
-    <div class="grid">
-      <div>
-        <h1 id="title">TXT → PDF</h1>
-        <p class="sub" id="subtitle">Type/paste text or drop a <b>.txt</b> file in the box on the right.</p>
-
-        <form id="f">
-          <textarea name="text" id="text" placeholder="Type your text here..."></textarea>
-          <div class="actions">
-            <button class="primary" type="submit" id="actionBtn">Create & Download PDF</button>
-            <button class="ghost" type="button" id="clearBtn">Clear</button>
-          </div>
-        </form>
-
-        <p class="muted" id="hint">In PDF → TXT mode, the extracted text appears here and downloads as .txt.</p>
+  <div class="shell">
+    <header>
+      <div class="logo"><strong>Yasmer <span>PDF</span></strong></div>
+      <div class="flags">
+        <!-- UK Flag -->
+        <button id="flag-en" class="flag active" aria-label="English">
+          <svg viewBox="0 0 60 40">
+            <clipPath id="ukc"><rect width="60" height="40" rx="2"/></clipPath>
+            <g clip-path="url(#ukc)">
+              <rect width="60" height="40" fill="#012169"/>
+              <path d="M0,0 60,40 M60,0 0,40" stroke="#fff" stroke-width="8"/>
+              <path d="M0,0 60,40 M60,0 0,40" stroke="#C8102E" stroke-width="4"/>
+              <rect x="26" width="8" height="40" fill="#fff"/>
+              <rect y="16" width="60" height="8" fill="#fff"/>
+              <rect x="28" width="4" height="40" fill="#C8102E"/>
+              <rect y="18" width="60" height="4" fill="#C8102E"/>
+            </g>
+          </svg>
+        </button>
+        <!-- TR Flag -->
+        <button id="flag-tr" class="flag" aria-label="Türkçe">
+          <svg viewBox="0 0 60 40">
+            <rect width="60" height="40" rx="2" fill="#E30A17"/>
+            <circle cx="26" cy="20" r="10" fill="#fff"/>
+            <circle cx="28.8" cy="20" r="8" fill="#E30A17"/>
+            <path d="M38 20 l7 -4 l-2.7 8.3 l-2.7 -8.3 l7 4 l-8.6 0" fill="#fff"/>
+          </svg>
+        </button>
       </div>
+    </header>
 
-      <div class="side">
-        <div class="panel">
-          <label for="mode" id="modeLabel">Conversion Mode</label>
-          <select id="mode">
-            <option value="txt2pdf">TXT → PDF</option>
-            <option value="pdf2txt">PDF → TXT</option>
-          </select>
+    <div class="card">
+      <div class="grid">
+        <!-- MAIN (left on desktop, bottom on mobile) -->
+        <div class="main">
+          <h1 id="title">TXT → PDF</h1>
+          <p class="sub" id="subtitle">Type/paste text or drop a <b>.txt</b> file in the box on the right.</p>
+
+          <form id="f">
+            <textarea name="text" id="text" placeholder="Type your text here..."></textarea>
+            <div class="actions">
+              <button class="primary" type="submit" id="actionBtn">Create & Download PDF</button>
+              <button class="ghost" type="button" id="clearBtn">Clear</button>
+            </div>
+          </form>
+
+          <p class="muted" id="hint">In PDF → TXT mode, the extracted text appears here and downloads as .txt.</p>
         </div>
 
-        <div class="panel">
-          <label id="uploadLabel">Upload (Drag & Drop)</label>
-          <div id="drop" class="drop">
-            <strong id="acceptLabel">.txt</strong> <span id="dropText">drop your file here</span><br/>
-            <span class="muted" id="orClick">or click to choose</span>
-            <input id="file" type="file" accept=".txt,text/plain" hidden>
+        <!-- SIDE (right on desktop, top on mobile) -->
+        <div class="side">
+          <div class="panel">
+            <label for="mode" id="modeLabel">Conversion Mode</label>
+            <select id="mode">
+              <option value="txt2pdf">TXT → PDF</option>
+              <option value="pdf2txt">PDF → TXT</option>
+            </select>
           </div>
-          <div style="margin-top:10px" class="muted" id="fileInfo"></div>
-        </div>
 
-        <div class="panel">
-          <label id="outLabel">Output Filename (optional)</label>
-          <input type="text" id="outName" placeholder="e.g. my-file">
-          <div class="muted" id="outHint">Extension is added automatically (.pdf / .txt)</div>
+          <div class="panel">
+            <label id="uploadLabel">Upload (Drag & Drop)</label>
+            <div id="drop" class="drop">
+              <strong id="acceptLabel">.txt</strong> <span id="dropText">drop your file here</span><br/>
+              <span class="muted" id="orClick">or click to choose</span>
+              <input id="file" type="file" accept=".txt,text/plain" hidden>
+            </div>
+            <div style="margin-top:10px" class="muted" id="fileInfo"></div>
+          </div>
+
+          <div class="panel">
+            <label id="outLabel">Output Filename (optional)</label>
+            <input type="text" id="outName" placeholder="e.g. my-file">
+            <div class="muted" id="outHint">Extension is added automatically (.pdf / .txt)</div>
+          </div>
         </div>
       </div>
     </div>
+
+    <footer>© <span id="y"></span> Yasmer PDF • Hosted on Vercel</footer>
   </div>
 
-  <footer>© <span id="y"></span> Yasmer PDF • Hosted on Vercel</footer>
-</div>
-
 <script>
-const I18N={en:{title_txt2pdf:"TXT → PDF",title_pdf2txt:"PDF → TXT",sub_txt2pdf:"Type/paste text or drop a <b>.txt</b> file in the box on the right.",sub_pdf2txt:"Drop a <b>.pdf</b> file in the box on the right; we’ll extract its text.",action_txt2pdf:"Create & Download PDF",action_pdf2txt:"Extract & Download (.txt)",clear:"Clear",hint:"In PDF → TXT mode, the extracted text appears here and downloads as .txt.",modeLabel:"Conversion Mode",uploadLabel:"Upload (Drag & Drop)",dropText:"drop your file here",orClick:"or click to choose",accept_txt:".txt",accept_pdf:".pdf",outLabel:"Output Filename (optional)",outHint:"Extension is added automatically (.pdf / .txt)",alerts:{txtOnly:"Please upload a .txt file.",pdfOnly:"Please upload a .pdf file.",emptyText:"Text is empty.",serverError:"Server error",extractFail:"Failed to extract text",tooBig:"File is too large (≤ 4 MB recommended)."}},
-tr:{title_txt2pdf:"TXT → PDF",title_pdf2txt:"PDF → TXT",sub_txt2pdf:"Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.",sub_pdf2txt:"Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.",action_txt2pdf:"PDF Oluştur ve İndir",action_pdf2txt:"Metni Çıkar ve İndir (.txt)",clear:"Temizle",hint:"PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.",modeLabel:"Dönüştürme Modu",uploadLabel:"Dosya Yükle (Sürükle & Bırak)",dropText:"dosyanı buraya bırak",orClick:"veya tıkla seç",accept_txt:".txt",accept_pdf:".pdf",outLabel:"Çıktı Dosya Adı (opsiyonel)",outHint:"Uzantı otomatik eklenir (.pdf / .txt)",alerts:{txtOnly:"Lütfen .txt dosyası yükleyin.",pdfOnly:"Lütfen .pdf dosyası yükleyin.",emptyText:"Metin boş.",serverError:"Sunucu hatası",extractFail:"Metin çıkarılamadı",tooBig:"Dosya çok büyük (≤ 4 MB önerilir)."}}};
-
-let lang="en";const $=id=>document.getElementById(id);
-const flagEn=$("flag-en"),flagTr=$("flag-tr");
-flagEn.addEventListener("click",()=>setLang("en"));
-flagTr.addEventListener("click",()=>setLang("tr"));
-function setLang(l){lang=l;flagEn.classList.toggle("active",l==="en");flagTr.classList.toggle("active",l==="tr");applyI18N();}
-const form=$("f"),txt=$("text"),clearBtn=$("clearBtn"),drop=$("drop"),fileInput=$("file"),
-fileInfo=$("fileInfo"),modeSel=$("mode"),titleEl=$("title"),subtitle=$("subtitle"),
-acceptLabel=$("acceptLabel"),outName=$("outName"),actionBtn=$("actionBtn"),hint=$("hint"),
-modeLabel=$("modeLabel"),uploadLabel=$("uploadLabel"),dropText=$("dropText"),orClick=$("orClick"),
-outLabel=$("outLabel"),outHint=$("outHint");
-document.getElementById("y").textContent=new Date().getFullYear();
-let mode="txt2pdf";
-function applyI18N(){
-  const T=I18N[lang];
-  hint.textContent=T.hint;
-  modeLabel.textContent=T.modeLabel;
-  uploadLabel.textContent=T.uploadLabel;
-  dropText.textContent=T.dropText;
-  orClick.textContent=T.orClick;
-  outLabel.textContent=T.outLabel;
-  outHint.textContent=T.outHint;
-  if(mode==="txt2pdf"){
-    titleEl.textContent=T.title_txt2pdf;
-    subtitle.innerHTML=T.sub_txt2pdf;
-    acceptLabel.textContent=T.accept_txt;
-    fileInput.accept=".txt,text/plain";
-    actionBtn.textContent=T.action_txt2pdf;
-    txt.placeholder=(lang==="en"?"Type your text here...":"Metni buraya yaz...");
-  }else{
-    titleEl.textContent=T.title_pdf2txt;
-    subtitle.innerHTML=T.sub_pdf2txt;
-    acceptLabel.textContent=T.accept_pdf;
-    fileInput.accept=".pdf,application/pdf";
-    actionBtn.textContent=T.action_pdf2txt;
-    txt.placeholder=(lang==="en"?"Extracted text will appear here...":"Çıkarılan metin burada görünecek...");
+/* ==================== i18n ==================== */
+const I18N = {
+  en: {
+    title_txt2pdf: "TXT → PDF",
+    title_pdf2txt: "PDF → TXT",
+    sub_txt2pdf: 'Type/paste text or drop a <b>.txt</b> file in the box on the right.',
+    sub_pdf2txt: 'Drop a <b>.pdf</b> file in the box on the right; we’ll extract its text.',
+    action_txt2pdf: "Create & Download PDF",
+    action_pdf2txt: "Extract & Download (.txt)",
+    clear: "Clear",
+    hint: "In PDF → TXT mode, the extracted text appears here and downloads as .txt.",
+    modeLabel: "Conversion Mode",
+    uploadLabel: "Upload (Drag & Drop)",
+    dropText: "drop your file here",
+    orClick: "or click to choose",
+    accept_txt: ".txt",
+    accept_pdf: ".pdf",
+    outLabel: "Output Filename (optional)",
+    outHint: "Extension is added automatically (.pdf / .txt)",
+    ph_txt: "Type your text here...",
+    alerts: {
+      txtOnly: "Please upload a .txt file.",
+      pdfOnly: "Please upload a .pdf file.",
+      emptyText: "Text is empty.",
+      serverError: "Server error",
+      extractFail: "Failed to extract text",
+      tooBig: "File is too large (≤ 4 MB recommended)."
+    }
+  },
+  tr: {
+    title_txt2pdf: "TXT → PDF",
+    title_pdf2txt: "PDF → TXT",
+    sub_txt2pdf: "Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.",
+    sub_pdf2txt: "Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.",
+    action_txt2pdf: "PDF Oluştur ve İndir",
+    action_pdf2txt: "Metni Çıkar ve İndir (.txt)",
+    clear: "Temizle",
+    hint: "PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.",
+    modeLabel: "Dönüştürme Modu",
+    uploadLabel: "Dosya Yükle (Sürükle & Bırak)",
+    dropText: "dosyanı buraya bırak",
+    orClick: "veya tıkla seç",
+    accept_txt: ".txt",
+    accept_pdf: ".pdf",
+    outLabel: "Çıktı Dosya Adı (opsiyonel)",
+    outHint: "Uzantı otomatik eklenir (.pdf / .txt)",
+    ph_txt: "Metni buraya yaz...",
+    alerts: {
+      txtOnly: "Lütfen .txt dosyası yükleyin.",
+      pdfOnly: "Lütfen .pdf dosyası yükleyin.",
+      emptyText: "Metin boş.",
+      serverError: "Sunucu hatası",
+      extractFail: "Metin çıkarılamadı",
+      tooBig: "Dosya çok büyük (≤ 4 MB önerilir)."
+    }
   }
-  clearBtn.textContent=T.clear;
+};
+
+let lang = "en"; // default English
+
+/* ==================== Elements ==================== */
+const $ = (id)=>document.getElementById(id);
+const flagEn = $("flag-en"), flagTr = $("flag-tr");
+
+const form = $("f"), txt = $("text"), clearBtn = $("clearBtn"),
+      drop = $("drop"), fileInput = $("file"), fileInfo = $("fileInfo"),
+      modeSel = $("mode"), titleEl = $("title"), subtitle = $("subtitle"),
+      acceptLabel = $("acceptLabel"), outName = $("outName"),
+      actionBtn = $("actionBtn"), hint = $("hint"),
+      modeLabel = $("modeLabel"), uploadLabel = $("uploadLabel"),
+      dropText = $("dropText"), orClick = $("orClick"),
+      outLabel = $("outLabel"), outHint = $("outHint");
+
+document.getElementById('y').textContent = new Date().getFullYear();
+let mode = 'txt2pdf';
+
+/* ==================== Language Switch ==================== */
+flagEn.addEventListener('click', ()=>setLang("en"));
+flagTr.addEventListener('click', ()=>setLang("tr"));
+function setLang(l){
+  lang = l;
+  flagEn.classList.toggle("active", l==="en");
+  flagTr.classList.toggle("active", l==="tr");
+  applyI18N();
+}
+
+function applyI18N(){
+  const T = I18N[lang];
+  modeLabel.textContent = T.modeLabel;
+  uploadLabel.textContent = T.uploadLabel;
+  dropText.textContent = T.dropText;
+  orClick.textContent = T.orClick;
+  outLabel.textContent = T.outLabel;
+  outHint.textContent = T.outHint;
+
+  if (mode === 'txt2pdf') {
+    titleEl.textContent = T.title_txt2pdf;
+    subtitle.innerHTML = T.sub_txt2pdf;
+    acceptLabel.textContent = T.accept_txt;
+    fileInput.accept = '.txt,text/plain';
+    actionBtn.textContent = T.action_txt2pdf;
+    txt.placeholder = T.ph_txt;
+  } else {
+    titleEl.textContent = T.title_pdf2txt;
+    subtitle.innerHTML = T.sub_pdf2txt;
+    acceptLabel.textContent = T.accept_pdf;
+    fileInput.accept = '.pdf,application/pdf';
+    actionBtn.textContent = T.action_pdf2txt;
+    txt.placeholder = (lang==="en"?"Extracted text will appear here...":"Çıkarılan metin burada görünecek...");
+  }
+  clearBtn.textContent = I18N[lang].clear;
 }
 applyI18N();
 
-modeSel.addEventListener("change",()=>{
-  mode=modeSel.value;
-  txt.value=""; fileInfo.textContent=""; outName.value="";
+/* ==================== Mode Switch ==================== */
+modeSel.addEventListener('change', ()=>{
+  mode = modeSel.value;
+  txt.value = '';
+  fileInfo.textContent = '';
+  outName.value = '';
   applyI18N();
 });
-form.addEventListener("submit",async e=>{
+
+/* ==================== Form submit ==================== */
+form.addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const base=(outName.value||(mode==="txt2pdf"?"text":"extracted")).trim();
-  if(mode==="txt2pdf") await createPdf(txt.value,base);
-  else if(!txt.value.trim()) alert(I18N[lang].alerts.emptyText);
+  const base = (outName.value || (mode === 'txt2pdf' ? 'text' : 'extracted')).trim();
+  if (mode === 'txt2pdf') {
+    await createPdf(txt.value, base);
+  } else {
+    if (!txt.value.trim()) alert(I18N[lang].alerts.emptyText);
+  }
 });
-clearBtn.addEventListener("click",()=>{txt.value=""; fileInfo.textContent=""; outName.value="";});
-drop.addEventListener("click",()=>fileInput.click());
-["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();drop.classList.add("drag");}));
-["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();drop.classList.remove("drag");}));
-drop.addEventListener("drop",e=>{
-  const f=e.dataTransfer.files?.[0]; if(f) handleFile(f);
+
+/* ==================== Clear ==================== */
+clearBtn.addEventListener('click', ()=>{
+  txt.value = '';
+  fileInfo.textContent = '';
+  outName.value = '';
 });
-fileInput.addEventListener("change",()=>{
-  const f=fileInput.files?.[0]; if(f) handleFile(f);
+
+/* ==================== Drag & Drop ==================== */
+drop.addEventListener('click', ()=> fileInput.click());
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
+  e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e=>{
+  e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
+}));
+
+drop.addEventListener('drop', (e)=>{
+  const file = e.dataTransfer.files?.[0];
+  if (file) handleFile(file);
 });
+fileInput.addEventListener('change', ()=>{
+  const file = fileInput.files?.[0];
+  if (file) handleFile(file);
+});
+
+/* ==================== File Handle ==================== */
 function handleFile(file){
-  const T=I18N[lang].alerts;
-  if(file.size>4*1024*1024) return alert(T.tooBig);
-  if(mode==="txt2pdf"){
-    if(!/\.txt$/i.test(file.name)) return alert(T.txtOnly);
-    const r=new FileReader();
-    r.onload=()=>{
-      txt.value=r.result;
-      const base=(outName.value||file.name.replace(/\.txt$/i,"")||"text");
-      fileInfo.textContent=`→ ${base}.pdf`;
-      createPdf(txt.value,base);
+  const T = I18N[lang].alerts;
+  // 4 MB öneri limiti (Vercel body limitine uygun)
+  if (file.size > 4 * 1024 * 1024) {
+    alert(T.tooBig);
+    return;
+  }
+
+  if (mode === 'txt2pdf') {
+    if (!/\.txt$/i.test(file.name)) return alert(T.txtOnly);
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      txt.value = reader.result;
+      const base = (outName.value || file.name.replace(/\.txt$/i,'') || 'text');
+      fileInfo.textContent = `→ ${base}.pdf`;
+      createPdf(txt.value, base);
     };
-    r.readAsText(file);
-  }else{
-    if(!/\.pdf$/i.test(file.name)) return alert(T.pdfOnly);
-    const base=(outName.value||file.name.replace(/\.pdf$/i,"")||"extracted");
-    fileInfo.textContent=`→ ${base}.txt`;
-    extractTextFromPdf(file,base);
+    reader.readAsText(file);
+  } else {
+    if (!/\.pdf$/i.test(file.name)) return alert(T.pdfOnly);
+    const base = (outName.value || file.name.replace(/\.pdf$/i,'') || 'extracted');
+    fileInfo.textContent = `→ ${base}.txt`;
+    extractTextFromPdf(file, base);
   }
 }
-async function createPdf(text,baseName){
-  const T=I18N[lang].alerts;
-  if(!text.trim()) return alert(T.emptyText);
-  actionBtn.disabled=true; actionBtn.textContent=(lang==="en"?"Creating...":"Oluşturuluyor...");
+
+/* ==================== TXT → PDF ==================== */
+async function createPdf(text, baseName){
+  const T = I18N[lang].alerts;
+  if (!text.trim()) { alert(T.emptyText); return; }
+  actionBtn.disabled = true; actionBtn.textContent = (lang==='en'?'Creating...':'Oluşturuluyor...');
   try{
-    const res=await fetch("/api/make-pdf",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,filename:baseName+".pdf"})});
-    if(!res.ok) throw new Error(T.serverError);
-    const blob=await res.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download=baseName+".pdf"; a.click();
+    const res = await fetch('/api/make-pdf', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, filename: baseName + '.pdf' })
+    });
+    if(!res.ok){
+      let msg = T.serverError;
+      try { const j = await res.json(); msg = j.error || msg; } catch {}
+      throw new Error(msg);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = baseName + '.pdf'; a.click();
     URL.revokeObjectURL(url);
-  }catch(err){alert("PDF: "+err.message);}
-  finally{actionBtn.disabled=false;applyI18N();}
+  }catch(err){
+    alert('PDF: ' + err.message);
+  }finally{
+    actionBtn.disabled = false; applyI18N();
+  }
 }
-async function extractTextFromPdf(file,baseName){
-  const T=I18N[lang].alerts;
-  actionBtn.disabled=true; actionBtn.textContent=(lang==="en"?"Extracting...":"Çıkarılıyor...");
+
+/* ==================== PDF → TXT ==================== */
+async function extractTextFromPdf(file, baseName){
+  const T = I18N[lang].alerts;
+  actionBtn.disabled = true; actionBtn.textContent = (lang==='en'?'Extracting...':'Çıkarılıyor...');
   try{
-    const buf=await file.arrayBuffer();
-    const res=await fetch("/api/pdf-to-txt",{method:"POST",headers:{"Content-Type":"application/pdf"},body:buf});
-    if(!res.ok) throw new Error(T.serverError);
-    const textRes=await res.text();
-    txt.value=textRes;
-    const blob=new Blob([textRes],{type:"text/plain;charset=utf-8"});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download=baseName+".txt"; a.click();
+    const arrayBuf = await file.arrayBuffer();
+    const res = await fetch('/api/pdf-to-txt', {
+      method:'POST',
+      headers:{ 'Content-Type': 'application/pdf' },
+      body: arrayBuf
+    });
+    if(!res.ok){
+      let msg = T.serverError;
+      try { const j = await res.json(); msg = j.error || msg; } catch {}
+      throw new Error(msg);
+    }
+    const textRes = await res.text();
+    txt.value = textRes;
+    const blob = new Blob([textRes], {type:'text/plain;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = baseName + '.txt'; a.click();
     URL.revokeObjectURL(url);
-  }catch(err){alert(T.extractFail+": "+err.message);}
-  finally{actionBtn.disabled=false;applyI18N();}
+  }catch(err){
+    alert(I18N[lang].alerts.extractFail + ': ' + err.message);
+  }finally{
+    actionBtn.disabled = false; applyI18N();
+  }
 }
 </script>
 </body>
 </html>
-
