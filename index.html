@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -23,6 +23,9 @@
     header{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px}
     .logo{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.2px}
     .logo span{background:linear-gradient(90deg,var(--acc1),var(--acc2)); -webkit-background-clip:text; color:transparent}
+    .flags{display:flex; gap:10px}
+    .flag{cursor:pointer; font-size:24px; line-height:1; filter:grayscale(60%);}
+    .flag.active{filter:none; transform:scale(1.05);}
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.08);
@@ -60,44 +63,40 @@
     .muted{color:var(--muted); font-size:14px}
     footer{margin-top:14px; color:var(--muted); font-size:13px; text-align:center}
     .badge{display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:12px; background:rgba(0,208,132,.12); color:#8bf0c8; border:1px solid rgba(0,208,132,.3)}
-    .lang{display:flex; align-items:center; gap:8px}
   </style>
 </head>
 <body>
   <div class="shell">
     <header>
       <div class="logo"><strong>Yasmer <span>PDF</span></strong></div>
-      <div class="lang">
-        <div class="badge" id="badge">Ücretsiz • Hızlı</div>
-        <select id="langSel" title="Language">
-          <option value="tr">Türkçe</option>
-          <option value="en">English</option>
-        </select>
+      <div class="flags">
+        <div id="flag-en" class="flag active" title="English">🇬🇧</div>
+        <div id="flag-tr" class="flag" title="Türkçe">🇹🇷</div>
       </div>
     </header>
 
     <div class="card">
       <div class="grid">
-        <!-- Sol taraf -->
+        <!-- Left -->
         <div>
           <h1 id="title">TXT → PDF</h1>
-          <p class="sub" id="subtitle">Metni yaz / yapıştır ya da sağdaki kutuya .txt dosyası bırak.</p>
+          <p class="sub" id="subtitle">Type/paste text or drop a .txt file in the box on the right.</p>
 
           <form id="f">
-            <textarea name="text" id="text" placeholder="Metni buraya yaz..."></textarea>
+            <textarea name="text" id="text" placeholder="Type your text here..."></textarea>
             <div class="actions">
-              <button class="primary" type="submit" id="actionBtn">PDF Oluştur ve İndir</button>
-              <button class="ghost" type="button" id="clearBtn">Temizle</button>
+              <button class="primary" type="submit" id="actionBtn">Create & Download PDF</button>
+              <button class="ghost" type="button" id="clearBtn">Clear</button>
             </div>
           </form>
 
-          <p class="muted" id="hint">PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.</p>
+          <p class="muted" id="hint">In PDF → TXT mode, the extracted text appears here and downloads as .txt.</p>
         </div>
 
-        <!-- Sağ taraf -->
+        <!-- Right -->
         <div class="side">
           <div class="panel">
-            <label for="mode" id="modeLabel">Dönüştürme Modu</label>
+            <label for="mode" id="modeLabel">Conversion Mode</label>
             <select id="mode">
               <option value="txt2pdf">TXT → PDF</option>
               <option value="pdf2txt">PDF → TXT</option>
@@ -105,59 +104,29 @@
           </div>
 
           <div class="panel">
-            <label id="uploadLabel">Dosya Yükle (Sürükle & Bırak)</label>
+            <label id="uploadLabel">Upload (Drag & Drop)</label>
             <div id="drop" class="drop">
-              <strong id="acceptLabel">.txt</strong> <span id="dropText">dosyanı buraya bırak</span><br/>
-              <span class="muted" id="orClick">veya tıkla seç</span>
+              <strong id="acceptLabel">.txt</strong> <span id="dropText">drop your file here</span><br/>
+              <span class="muted" id="orClick">or click to choose</span>
               <input id="file" type="file" accept=".txt,text/plain" hidden>
             </div>
             <div style="margin-top:10px" class="muted" id="fileInfo"></div>
           </div>
 
           <div class="panel">
-            <label id="outLabel">Çıktı Dosya Adı (opsiyonel)</label>
-            <input type="text" id="outName" placeholder="ör. my-file">
-            <div class="muted" id="outHint">Uzantı otomatik eklenir (.pdf / .txt)</div>
+            <label id="outLabel">Output Filename (optional)</label>
+            <input type="text" id="outName" placeholder="e.g. my-file">
+            <div class="muted" id="outHint">Extension is added automatically (.pdf / .txt)</div>
           </div>
         </div>
       </div>
     </div>
 
-    <footer>© <span id="y"></span> Yasmer PDF • <span id="hosted">Vercel üzerinde barındırılıyor</span></footer>
+    <footer>© <span id="y"></span> Yasmer PDF • <span id="hosted">Hosted on Vercel</span></footer>
   </div>
 
 <script>
-/* ==================== i18n ==================== */
 const I18N = {
-  tr: {
-    badge: "Ücretsiz • Hızlı",
-    title_txt2pdf: "TXT → PDF",
-    title_pdf2txt: "PDF → TXT",
-    sub_txt2pdf: "Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.",
-    sub_pdf2txt: "Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.",
-    action_txt2pdf: "PDF Oluştur ve İndir",
-    action_pdf2txt: "Metni Çıkar ve İndir (.txt)",
-    clear: "Temizle",
-    hint: "PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.",
-    modeLabel: "Dönüştürme Modu",
-    uploadLabel: "Dosya Yükle (Sürükle & Bırak)",
-    dropText: "dosyanı buraya bırak",
-    orClick: "veya tıkla seç",
-    accept_txt: ".txt",
-    accept_pdf: ".pdf",
-    outLabel: "Çıktı Dosya Adı (opsiyonel)",
-    outHint: "Uzantı otomatik eklenir (.pdf / .txt)",
-    hosted: "Vercel üzerinde barındırılıyor",
-    ph_txt: "Metni buraya yaz...",
-    alerts: {
-      txtOnly: "Lütfen .txt dosyası yükleyin.",
-      pdfOnly: "Lütfen .pdf dosyası yükleyin.",
-      emptyText: "Metin boş.",
-      serverError: "Sunucu hatası",
-      extractFail: "Metin çıkarılamadı",
-      tooBig: "Dosya çok büyük (≤ 4 MB önerilir)."
-    }
-  },
   en: {
     badge: "Free • Fast",
     title_txt2pdf: "TXT → PDF",
@@ -186,45 +155,67 @@ const I18N = {
       extractFail: "Failed to extract text",
       tooBig: "File is too large (≤ 4 MB recommended)."
     }
+  },
+  tr: {
+    badge: "Ücretsiz • Hızlı",
+    title_txt2pdf: "TXT → PDF",
+    title_pdf2txt: "PDF → TXT",
+    sub_txt2pdf: "Metni yaz / yapıştır ya da sağdaki kutuya <b>.txt</b> dosyası bırak.",
+    sub_pdf2txt: "Sağdaki kutuya <b>.pdf</b> dosyasını bırak; metnini çıkaralım.",
+    action_txt2pdf: "PDF Oluştur ve İndir",
+    action_pdf2txt: "Metni Çıkar ve İndir (.txt)",
+    clear: "Temizle",
+    hint: "PDF → TXT modunda yüklediğin PDF’in metnini burada görebilir ve .txt olarak indirebilirsin.",
+    modeLabel: "Dönüştürme Modu",
+    uploadLabel: "Dosya Yükle (Sürükle & Bırak)",
+    dropText: "dosyanı buraya bırak",
+    orClick: "veya tıkla seç",
+    accept_txt: ".txt",
+    accept_pdf: ".pdf",
+    outLabel: "Çıktı Dosya Adı (opsiyonel)",
+    outHint: "Uzantı otomatik eklenir (.pdf / .txt)",
+    hosted: "Vercel üzerinde barındırılıyor",
+    ph_txt: "Metni buraya yaz...",
+    alerts: {
+      txtOnly: "Lütfen .txt dosyası yükleyin.",
+      pdfOnly: "Lütfen .pdf dosyası yükleyin.",
+      emptyText: "Metin boş.",
+      serverError: "Sunucu hatası",
+      extractFail: "Metin çıkarılamadı",
+      tooBig: "Dosya çok büyük (≤ 4 MB önerilir)."
+    }
   }
 };
 
-let lang = (navigator.language || "tr").toLowerCase().startsWith("tr") ? "tr" : "en";
+let lang = "en"; // default English
 const $ = (id)=>document.getElementById(id);
+const flagEn = $("flag-en"), flagTr = $("flag-tr");
 
-const langSel = $("langSel");
-langSel.value = lang;
+flagEn.addEventListener('click', ()=>setLang("en"));
+flagTr.addEventListener('click', ()=>setLang("tr"));
 
-/* ==================== Elements ==================== */
-const form = $("f");
-const txt = $("text");
-const clearBtn = $("clearBtn");
-const drop = $("drop");
-const fileInput = $("file");
-const fileInfo = $("fileInfo");
-const modeSel = $("mode");
-const titleEl = $("title");
-const subtitle = $("subtitle");
-const acceptLabel = $("acceptLabel");
-const outName = $("outName");
-const actionBtn = $("actionBtn");
-const badge = $("badge");
-const hint = $("hint");
-const modeLabel = $("modeLabel");
-const uploadLabel = $("uploadLabel");
-const dropText = $("dropText");
-const orClick = $("orClick");
-const outLabel = $("outLabel");
-const outHint = $("outHint");
-const hosted = $("hosted");
+function setLang(l){
+  lang = l;
+  flagEn.classList.toggle("active", l==="en");
+  flagTr.classList.toggle("active", l==="tr");
+  applyI18N();
+}
+
+/* Elements */
+const form = $("f"), txt = $("text"), clearBtn = $("clearBtn"),
+      drop = $("drop"), fileInput = $("file"), fileInfo = $("fileInfo"),
+      modeSel = $("mode"), titleEl = $("title"), subtitle = $("subtitle"),
+      acceptLabel = $("acceptLabel"), outName = $("outName"),
+      actionBtn = $("actionBtn"), hint = $("hint"),
+      modeLabel = $("modeLabel"), uploadLabel = $("uploadLabel"),
+      dropText = $("dropText"), orClick = $("orClick"),
+      outLabel = $("outLabel"), outHint = $("outHint"), hosted = $("hosted");
+
 document.getElementById('y').textContent = new Date().getFullYear();
-
 let mode = 'txt2pdf';
 
-/* ==================== i18n Apply ==================== */
-function applyI18N() {
+function applyI18N(){
   const T = I18N[lang];
-  badge.textContent = T.badge;
   hint.textContent = T.hint;
   modeLabel.textContent = T.modeLabel;
   uploadLabel.textContent = T.uploadLabel;
@@ -247,20 +238,13 @@ function applyI18N() {
     acceptLabel.textContent = T.accept_pdf;
     fileInput.accept = '.pdf,application/pdf';
     actionBtn.textContent = T.action_pdf2txt;
-    txt.placeholder = (lang==='tr'
-      ? 'Çıkarılan metin burada görünecek...'
-      : 'Extracted text will appear here...');
+    txt.placeholder = (lang==="en"?"Extracted text will appear here...":"Çıkarılan metin burada görünecek...");
   }
   clearBtn.textContent = T.clear;
 }
 applyI18N();
 
-langSel.addEventListener('change', ()=>{
-  lang = langSel.value;
-  applyI18N();
-});
-
-/* ==================== Mode Switch ==================== */
+/* Mode switch */
 modeSel.addEventListener('change', ()=>{
   mode = modeSel.value;
   txt.value = '';
@@ -269,25 +253,25 @@ modeSel.addEventListener('change', ()=>{
   applyI18N();
 });
 
-/* ==================== Form submit ==================== */
-form.addEventListener('submit', async (e)=>{
+/* Form submit */
+form.addEventListener('submit', async e=>{
   e.preventDefault();
   const base = (outName.value || (mode === 'txt2pdf' ? 'text' : 'extracted')).trim();
   if (mode === 'txt2pdf') {
     await createPdf(txt.value, base);
-  } else {
-    if (!txt.value.trim()) alert(I18N[lang].alerts.emptyText);
+  } else if (!txt.value.trim()) {
+    alert(I18N[lang].alerts.emptyText);
   }
 });
 
-/* ==================== Clear ==================== */
+/* Clear */
 clearBtn.addEventListener('click', ()=>{
   txt.value = '';
   fileInfo.textContent = '';
   outName.value = '';
 });
 
-/* ==================== Drag & Drop ==================== */
+/* Drag & drop */
 drop.addEventListener('click', ()=> fileInput.click());
 ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e=>{
   e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');
@@ -296,7 +280,7 @@ drop.addEventListener('click', ()=> fileInput.click());
   e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
 }));
 
-drop.addEventListener('drop', (e)=>{
+drop.addEventListener('drop', e=>{
   const file = e.dataTransfer.files?.[0];
   if (file) handleFile(file);
 });
@@ -305,14 +289,9 @@ fileInput.addEventListener('change', ()=>{
   if (file) handleFile(file);
 });
 
-/* ==================== File Handle ==================== */
 function handleFile(file){
   const T = I18N[lang].alerts;
-  // 4 MB sınırı (Vercel request body limiti)
-  if (file.size > 4 * 1024 * 1024) {
-    alert(T.tooBig);
-    return;
-  }
+  if (file.size > 4 * 1024 * 1024) return alert(T.tooBig);
 
   if (mode === 'txt2pdf') {
     if (!/\.txt$/i.test(file.name)) return alert(T.txtOnly);
@@ -332,11 +311,10 @@ function handleFile(file){
   }
 }
 
-/* ==================== TXT → PDF ==================== */
 async function createPdf(text, baseName){
   const T = I18N[lang].alerts;
-  if (!text.trim()) { alert(T.emptyText); return; }
-  actionBtn.disabled = true; actionBtn.textContent = (lang==='tr'?'Oluşturuluyor...':'Creating...');
+  if (!text.trim()) return alert(T.emptyText);
+  actionBtn.disabled = true; actionBtn.textContent = lang==="en"?"Creating...":"Oluşturuluyor...";
   try{
     const res = await fetch('/api/make-pdf', {
       method:'POST',
@@ -353,17 +331,13 @@ async function createPdf(text, baseName){
     const a = document.createElement('a');
     a.href = url; a.download = baseName + '.pdf'; a.click();
     URL.revokeObjectURL(url);
-  }catch(err){
-    alert('PDF: ' + err.message);
-  }finally{
-    actionBtn.disabled = false; applyI18N();
-  }
+  }catch(err){ alert('PDF: '+err.message); }
+  finally{ actionBtn.disabled = false; applyI18N(); }
 }
 
-/* ==================== PDF → TXT (RAW) ==================== */
 async function extractTextFromPdf(file, baseName){
   const T = I18N[lang].alerts;
-  actionBtn.disabled = true; actionBtn.textContent = (lang==='tr'?'Çıkarılıyor...':'Extracting...');
+  actionBtn.disabled = true; actionBtn.textContent = lang==="en"?"Extracting...":"Çıkarılıyor...";
   try{
     const arrayBuf = await file.arrayBuffer();
     const res = await fetch('/api/pdf-to-txt', {
